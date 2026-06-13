@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سكنك | Saknk Real Estate</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Tajawal -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; overflow-x: hidden; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-20px) scale(1.05); }
+        }
+        @keyframes fadeUpStagger {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+          animation: fadeUpStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+        .glass-heavy {
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+        }
+        .blend-multiply { mix-blend-mode: multiply; }
+        .blend-screen { mix-blend-mode: screen; }
+        
+        /* Map Pin Animation */
+        .pin-bounce { animation: pinBounce 2s infinite; }
+        @keyframes pinBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-[#F0F3FA] text-gray-900 transition-colors duration-500">
+
+    <div id="app"></div>
+
+    <script>
+        // --- 1. Data & Translations ---
+        const translations = {
+          ar: {
+            appName: "سكنك", login: "إنشاء حساب", changeLang: "تغيير اللغة", arabic: "العربية", english: "English",
+            newDemo: "ديمو الجديدة", oldDemo: "ديمو القديمة", newDemoTitle: "عقارات ديمو الجديدة", oldDemoTitle: "عقارات ديمو القديمة",
+            choosePhase: "اختر المرحلة", all: "الكل", phase1: "الأولى", phase2: "الثانية", phase3: "الثالثة", phase4: "الرابعة",
+            curated: "مختارات مصممة خصيصاً لك", results: "نتائج", featured: "مميز", beds: "غرف", baths: "حمامات", area: "متر",
+            ref: "رقم مرجعي", location: "الموقع", amenities: "المرافق", verifiedAgent: "وكيل معتمد", propertyDetails: "تفاصيل العقار",
+            neighborhood: "الموقع والأماكن القريبة", description: "اكتشف الفخامة في هذا العقار الرائع المصمم لتلبية أرقى معايير الحياة العصرية. يتميز بتشطيبات راقية، إضاءة طبيعية ممتازة، وموقع استراتيجي يضمن لك الراحة والهدوء.",
+            recommended: "عقارات مميزة", whatsapp: "واتساب", callNow: "إتصل الآن", gender_male: "سكن طلاب", gender_female: "سكن طالبات",
+            gender_family: "سكن عائلات", occupants: "أفراد", contactUs: "تواصل معنا", contactDesc: "نحن هنا لمساعدتك في إيجاد سكنك المثالي أو عرض عقارك.",
+            name: "الاسم بالكامل", phone: "رقم الواتساب", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
+            userType: "صفتي", landlord: "مالك العقار", broker: "سمسار / شركة تسويق", send: "إرسال الطلب", favorites: "المفضلة",
+            noFavoritesTitle: "قائمتك فارغة", noFavoritesDesc: "لم تقم بإضافة أي عقارات للمفضلة بعد. اكتشف العقارات المميزة واضغط على علامة القلب 🤍",
+            toastFavAdd: "تمت الإضافة للمفضلة بنجاح 🤍", toastFavRemove: "تم الإزالة من المفضلة", toastFormSuccess: "تم إرسال طلبك بنجاح ✅ سنتواصل معك قريباً.",
+            tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", filters: "تصفية", priceRange: "نطاق السعر", applyFilters: "تطبيق",
+            mapView: "خريطة", gridView: "قائمة", compare: "مقارنة", addCompare: "أضف للمقارنة", compareLimit: "تم تحديد عقارين", compareNow: "قارن الآن",
+            propertyCompare: "مقارنة العقارات", distanceToUni: "البعد عن الجامعة", addToHome: "أضف سكنك للشاشة الرئيسية", addToHomeDesc: "للوصول السريع وتجربة تشبه التطبيق",
+            reelsTitle: "جولات عقارية 🎬", addToHomeBtn: "إضافة"
+          },
+          en: {
+            appName: "Saknk", login: "Sign up", changeLang: "Change Language", arabic: "العربية", english: "English",
+            newDemo: "New Demo", oldDemo: "Old Demo", newDemoTitle: "New Demo Properties", oldDemoTitle: "Old Demo Properties",
+            choosePhase: "Choose Phase", all: "All", phase1: "First", phase2: "Second", phase3: "Third", phase4: "Fourth",
+            curated: "Curated specially for you", results: "Results", featured: "Featured", beds: "Beds", baths: "Baths", area: "SQM",
+            ref: "Ref", location: "Location", amenities: "Amenities", verifiedAgent: "Verified Agent", propertyDetails: "Property Details",
+            neighborhood: "Neighborhood", description: "Discover luxury in this exquisite property designed to meet the highest standards of modern living. Featuring premium finishes, excellent natural lighting, and a strategic location ensuring comfort and tranquility.",
+            recommended: "Featured Properties", whatsapp: "WhatsApp", callNow: "Call Now", gender_male: "Male Students", gender_female: "Female Students",
+            gender_family: "Families", occupants: "Persons", contactUs: "Contact Us", contactDesc: "We are here to help you find your perfect home or list your property.",
+            name: "Full Name", phone: "WhatsApp Number", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
+            userType: "My Role", landlord: "Property Owner", broker: "Broker", send: "Submit Request", favorites: "Favorites",
+            noFavoritesTitle: "Your List is Empty", noFavoritesDesc: "You haven't added any properties to your favorites yet. Explore and click the heart icon 🤍",
+            toastFavAdd: "Added to favorites successfully 🤍", toastFavRemove: "Removed from favorites", toastFormSuccess: "Request sent successfully ✅ We will contact you soon.",
+            tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", filters: "Filters", priceRange: "Price Range", applyFilters: "Apply",
+            mapView: "Map", gridView: "List", compare: "Compare", addCompare: "Add to Compare", compareLimit: "2 properties selected", compareNow: "Compare Now",
+            propertyCompare: "Property Comparison", distanceToUni: "Distance to Uni", addToHome: "Add Saknk to Home Screen", addToHomeDesc: "For fast access and app-like experience",
+            reelsTitle: "Property Reels 🎬", addToHomeBtn: "Add"
+          }
+        };
+
+        // ألوان المنصة
+        const C = {
+            bgLight: '#F0F3FA', borderLight: '#D5DEEF', softBlue: '#B1C9EF', midBlue: '#8AAEE0', primary: '#638ECB', darkBlue: '#395886',
+            bgDark: '#0b1221', cardDark: '#152033'  
+        };
+        const mainLogoUrl = "https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png"; 
+
+        const properties = [
+          {
+            id: 1, title: { ar: "شقة مودرن فاخرة مفروشة بالكامل بإطلالة بانورامية", en: "Modern fully furnished apartment with panoramic view" },
+            location: { ar: "ديمو الجديدة، المرحلة الأولى", en: "New Demo, First Phase" }, price: "25,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
+            pricePerPerson: "6,250", beds: 2, baths: 1, area: 85, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 2, total: 4 },
+            demoLocation: "newDemo", phase: "phase1", featured: true, images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+            agent: { name: "Diamond Luxury", verified: true, rate: 4.9 }, features: { ar: ["واي فاي", "تكييف", "غسالة", "مطبخ", "جيم"], en: ["Wi-Fi", "AC", "Washing Machine", "Kitchen", "Gym"] },
+            trustBadges: { ar: ["شامل الفواتير", "بدون عمولة"], en: ["Bills Included", "No Commission"] },
+            pois: [{ icon: 'graduation-cap', ar: "الجامعة (2 كم)", en: "University (2 km)", time: "5 min" }],
+            mapCoords: { top: '35%', left: '45%' }
+          },
+          {
+            id: 2, title: { ar: "شقة 100 متر 2 غرف بتشطيبات الترا سوبر لوكس", en: "100 SQM 2-Bedroom Ultra Super Lux Appt" },
+            location: { ar: "ديمو القديمة، القاهرة", en: "Old Demo, Cairo" }, price: "47,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
+            pricePerPerson: "23,500", beds: 2, baths: 2, area: 100, type: { ar: "شقة", en: "Apartment" }, gender: "female", occupancy: { current: 1, total: 2 },
+            demoLocation: "oldDemo", featured: false, images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+            agent: { name: "TruBroker™", verified: true, rate: 4.7 }, features: { ar: ["تكييف", "مطبخ", "حديقة", "أمن"], en: ["AC", "Kitchen", "Garden", "Security"] },
+            trustBadges: { ar: ["أمن 24 ساعة", "عقار موثق"], en: ["24/7 Security", "Verified"] },
+            pois: [{ icon: 'graduation-cap', ar: "الجامعة (5 كم)", en: "University (5 km)", time: "15 min" }],
+            mapCoords: { top: '55%', left: '70%' }
+          },
+          {
+            id: 3, title: { ar: "شقة (سمارت هوم) مفروشة بالكامل - الخيار الأمثل", en: "Smart Home Fully Furnished Appt - Perfect Choice" },
+            location: { ar: "ديمو الجديدة، المرحلة الثانية", en: "New Demo, Second Phase" }, price: "100,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
+            beds: 3, baths: 3, area: 200, type: { ar: "شقة", en: "Apartment" }, gender: "family", occupancy: null,
+            demoLocation: "newDemo", phase: "phase2", featured: true, images: ["https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+            agent: { name: "Elite Homes", verified: true, rate: 5.0 }, features: { ar: ["واي فاي", "تكييف مركزي", "غسالة"], en: ["Wi-Fi", "Central AC", "Washing Machine"] },
+            trustBadges: { ar: ["صيانة مجانية", "سمارت هوم"], en: ["Free Maint.", "Smart Home"] },
+            pois: [{ icon: 'shopping-cart', ar: "مول تجاري (1.5 كم)", en: "Mall (1.5 km)", time: "4 min" }],
+            mapCoords: { top: '40%', left: '25%' }
+          },
+          {
+            id: 4, title: { ar: "فيلا مستقلة بحمام سباحة وحديقة خاصة", en: "Standalone Villa with Pool & Private Garden" },
+            location: { ar: "ديمو الجديدة، المرحلة الثالثة", en: "New Demo, Third Phase" }, price: "15,000,000", currency: { ar: "ج.م", en: "EGP" },
+            beds: 4, baths: 3, area: 450, type: { ar: "فيلا", en: "Villa" }, gender: "family", occupancy: null,
+            demoLocation: "newDemo", phase: "phase3", featured: true, images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+            agent: { name: "Ajwar Real", verified: true, rate: 4.8 }, features: { ar: ["موقف سيارات", "حديقة خاصة", "أمن"], en: ["Parking", "Garden", "Security"] },
+            trustBadges: { ar: ["مطور معتمد", "تشطيب فاخر"], en: ["Certified Dev", "Luxury Finish"] },
+            pois: [{ icon: 'trees', ar: "حديقة عامة (200 م)", en: "Park (200 m)", time: "2 min walk" }],
+            mapCoords: { top: '70%', left: '50%' }
+          },
+          {
+            id: 5, title: { ar: "شقة ستوديو شبابي بموقع حيوي جداً", en: "Youth Studio Appt in Prime Location" },
+            location: { ar: "ديمو الجديدة، المرحلة الرابعة", en: "New Demo, Fourth Phase" }, price: "18,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
+            pricePerPerson: "4,500", beds: 1, baths: 1, area: 65, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 3, total: 4 },
+            demoLocation: "newDemo", phase: "phase4", featured: false, images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+            agent: { name: "Future Homes", verified: true, rate: 4.6 }, features: { ar: ["واي فاي", "أمن 24/7", "غسالة"], en: ["Wi-Fi", "Security", "Washing"] },
+            trustBadges: { ar: ["بدون تأمين", "قريب من المواصلات"], en: ["No Deposit", "Near Transit"] },
+            pois: [{ icon: 'bus-front', ar: "مواصلات رئيسية (50 م)", en: "Main Transit (50 m)", time: "1 min walk" }],
+            mapCoords: { top: '20%', left: '60%' }
+          }
+        ];
+
+        const reelsData = [
+            { id: 1, image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&h=1000&q=80", title: "جولة في شقة المرحلة الأولى" },
+            { id: 2, image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&h=1000&q=80", title: "أفخم ستوديو للطلاب" },
+            { id: 3, image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=600&h=1000&q=80", title: "فيلا الأحلام بديمو" }
+        ];
+
+        // --- 2. Global State ---
+        let state = {
+            isDark: false, 
+            lang: 'ar',
+            activeLocation: 'newDemo',
+            activePhase: 'all',
+            viewMode: 'grid', 
+            showFavorites: false,
+            favorites: [],
+            compareList: [],
+            showCompareModal: false,
+            selectedPropertyId: null,
+            activePinId: null,
+            isMenuOpen: false,
+            isFilterOpen: false,
+            isChatOpen: false,
+            chatMessages: [],
+            chatInput: '',
+            contactType: 'tenant',
+            imageIndex: 0,
+            showPwaPrompt: true 
+        };
+
+        // --- Helper Functions ---
+        const t = (key) => translations[state.lang][key] || key;
+        
+        const getTheme = () => ({
+            bgMain: state.isDark ? `bg-[${C.bgDark}]` : `bg-[${C.bgLight}]`,
+            textMain: state.isDark ? `text-[${C.bgLight}]` : `text-[${C.bgDark}]`,
+            textMuted: state.isDark ? `text-[${C.softBlue}]` : `text-[${C.darkBlue}]/70`,
+            cardBg: state.isDark ? `bg-[${C.cardDark}]/80 backdrop-blur-xl border border-[${C.darkBlue}]/30 shadow-2xl` : `bg-white/90 backdrop-blur-xl border border-[${C.borderLight}] shadow-xl`,
+            islandBg: state.isDark ? `bg-[${C.bgDark}]/40 glass-heavy border border-[${C.darkBlue}]/40 shadow-[0_8px_30px_rgba(0,0,0,0.5)]` : `bg-white/50 glass-heavy border border-[${C.borderLight}]/80 shadow-[0_8px_30px_rgba(99,142,203,0.15)]`,
+            btnBg: state.isDark ? `bg-[${C.darkBlue}]/30 hover:bg-[${C.darkBlue}]/50 border border-transparent` : `bg-[${C.borderLight}]/50 hover:bg-[${C.softBlue}]/50 border border-[${C.borderLight}]/50`,
+            inputBg: state.isDark ? `bg-[${C.bgDark}]/50 border-[${C.darkBlue}]/50 text-white focus:border-[${C.primary}]` : `bg-white border-[${C.borderLight}] text-[${C.bgDark}] focus:border-[${C.primary}]`,
+            inputWrapperBg: state.isDark ? `bg-[${C.bgDark}]/50 border-[${C.darkBlue}]/50 text-white focus-within:border-[${C.primary}]` : `bg-white border-[${C.borderLight}] text-[${C.bgDark}] focus-within:border-[${C.primary}]`
+        });
+
+        const getFeatureIcon = (feature) => {
+            const f = feature.toLowerCase();
+            if(f.includes('واي فاي') || f.includes('wi-fi')) return 'wifi';
+            if(f.includes('تكييف') || f.includes('ac')) return 'wind';
+            if(f.includes('غسالة') || f.includes('washing')) return 'shirt';
+            if(f.includes('مطبخ') || f.includes('kitchen')) return 'utensils';
+            if(f.includes('رياضية') || f.includes('gym')) return 'dumbbell';
+            if(f.includes('سيارات') || f.includes('parking')) return 'car-front';
+            if(f.includes('أمن') || f.includes('security')) return 'shield';
+            if(f.includes('حديقة') || f.includes('garden')) return 'trees';
+            return 'check-circle-2';
+        };
+
+        const showToast = (msg) => {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-[${C.bgDark}]/90 glass-heavy border border-[${C.primary}]/50 text-white px-6 py-3.5 rounded-2xl font-bold shadow-[0_10px_40px_rgba(99,142,203,0.3)] animate-in slide-in-from-top-10 fade-in duration-300 flex items-center gap-2 whitespace-nowrap`;
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+        };
+
+        // --- State Mutations ---
+        window.toggleTheme = () => { state.isDark = !state.isDark; renderApp(); };
+        window.toggleLang = () => { state.lang = state.lang === 'ar' ? 'en' : 'ar'; document.dir = state.lang === 'ar' ? 'rtl' : 'ltr'; renderApp(); };
+        window.toggleFilter = () => { state.isFilterOpen = !state.isFilterOpen; renderApp(); };
+        window.setLocation = (loc) => { state.activeLocation = loc; if(loc !== 'newDemo') state.activePhase = 'all'; renderApp(); };
+        window.setPhase = (phase) => { state.activePhase = phase; renderApp(); };
+        window.setViewMode = (mode) => { state.viewMode = mode; renderApp(); };
+        window.toggleShowFavs = () => { state.showFavorites = !state.showFavorites; renderApp(); };
+        window.dismissPwa = () => { state.showPwaPrompt = false; renderApp(); };
+        
+        window.toggleFav = (id, e) => {
+            if(e) e.stopPropagation();
+            if(state.favorites.includes(id)) { state.favorites = state.favorites.filter(f => f !== id); showToast(t('toastFavRemove')); } 
+            else { state.favorites.push(id); showToast(t('toastFavAdd')); }
+            renderApp();
+        };
+
+        window.toggleCompare = (id, e) => {
+            if(e) e.stopPropagation();
+            if(state.compareList.includes(id)) {
+                state.compareList = state.compareList.filter(c => c !== id);
+            } else {
+                if(state.compareList.length >= 2) { showToast("يمكنك مقارنة عقارين فقط في نفس الوقت ⚖️"); return; }
+                state.compareList.push(id);
+                if(state.compareList.length === 2) showToast("تم تحديد عقارين. اضغط 'قارن الآن' ⚖️");
+            }
+            renderApp();
+        };
+        
+        window.openCompareModal = () => { state.showCompareModal = true; renderApp(); };
+        window.closeCompareModal = () => { state.showCompareModal = false; renderApp(); };
+        window.selectProperty = (id) => { state.selectedPropertyId = id; state.imageIndex = 0; window.scrollTo(0,0); renderApp(); };
+        window.clearSelection = () => { state.selectedPropertyId = null; window.scrollTo(0,0); renderApp(); };
+        window.setContactType = (type) => { state.contactType = type; renderApp(); };
+        window.submitForm = (e) => { e.preventDefault(); showToast(t('toastFormSuccess')); };
+        window.nextImage = (e, len) => { e.stopPropagation(); state.imageIndex = (state.imageIndex + 1) % len; renderApp(); };
+        window.prevImage = (e, len) => { e.stopPropagation(); state.imageIndex = state.imageIndex === 0 ? len - 1 : state.imageIndex - 1; renderApp(); };
+        window.setActivePin = (id) => { state.activePinId = state.activePinId === id ? null : id; renderApp(); };
+
+        // --- Chatbot Logic ---
+        window.toggleChat = () => { 
+            state.isChatOpen = !state.isChatOpen; 
+            if(state.isChatOpen && state.chatMessages.length === 0) {
+                state.chatMessages = [{ sender: 'ai', text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 أنا المساعد الذكي، كيف يمكنني مساعدتك؟' : 'Welcome! 🤖 I am your AI assistant.' }];
+            }
+            renderApp(); 
+            setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
+        };
+        window.closeChat = () => { state.isChatOpen = false; renderApp(); };
+        window.updateChatInput = (val) => { state.chatInput = val; };
+        
+        window.sendChatMessage = (e, textOverride) => {
+            if(e) e.preventDefault();
+            const text = textOverride || state.chatInput;
+            if(!text.trim()) return;
+            state.chatMessages.push({ sender: 'user', text });
+            state.chatInput = '';
+            renderApp();
+            setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
+            
+            setTimeout(() => {
+                let query = text.toLowerCase();
+                let reply = state.lang === 'ar' ? 'شكراً لاستفسارك! سأقوم بتحويل طلبك لأحد وكلائنا 🏡' : 'Thanks! I will forward your request 🏡';
+                if (query.includes('طالب') || query.includes('student')) reply = state.lang === 'ar' ? 'لدينا خيارات ممتازة لسكن الطلاب! تصفح العقارات واختيار "سكن طلاب".' : 'We have great options for student housing!';
+                if (query.includes('سعر') || query.includes('cheap') || query.includes('رخيص')) reply = state.lang === 'ar' ? 'الأسعار تبدأ من 18,000 ج.م، ولدينا سكن مشترك بـ 4,500 ج.م للفرد.' : 'Prices start at 18,000 EGP, co-living from 4,500 EGP/person.';
+                if (query.includes('مرحلة') || query.includes('رابعة') || query.includes('phase')) reply = state.lang === 'ar' ? 'لدينا عقارات تغطي جميع المراحل من الأولى للرابعة! استخدم الفلاتر للبحث بدقة.' : 'We have properties in phases 1 to 4! Use filters to refine search.';
+                
+                state.chatMessages.push({ sender: 'ai', text: reply });
+                renderApp();
+                setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
+            }, 1000);
+        };
+
+        // --- Render Functions ---
+        const renderAmbientGlow = () => `
+            <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+                <div class="absolute top-[-10%] ${state.lang === 'ar' ? 'right-[-10%]' : 'left-[-10%]'} w-[60vw] h-[60vw] rounded-full blur-[140px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.primary}]/15` : `bg-[${C.midBlue}]/25`}" style="animation: float 15s ease-in-out infinite"></div>
+                <div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.darkBlue}]/20` : `bg-[${C.primary}]/15`}" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div>
+            </div>
+        `;
+
+        // PWA Banner (Inline)
+        const renderPwaPrompt = (theme) => {
+            if (!state.showPwaPrompt) return '';
+            return `
+            <div class="w-full ${theme.islandBg} px-4 py-3 rounded-[1.5rem] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                <img src="${mainLogoUrl}" class="w-10 h-10 rounded-xl bg-white p-1 object-contain shadow-sm border border-gray-100">
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-sm ${theme.textMain} truncate">${t('addToHome')}</p>
+                    <p class="text-[11px] ${theme.textMuted} truncate mt-0.5">${t('addToHomeDesc')}</p>
+                </div>
+                <button onclick="window.dismissPwa()" class="bg-[${C.primary}] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all flex-shrink-0">${t('addToHomeBtn')}</button>
+                <button onclick="window.dismissPwa()" class="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors flex-shrink-0 ml-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            `;
+        };
+
+        const renderHeader = (theme) => `
+            <div class="fixed top-4 left-4 right-4 z-40 max-w-7xl mx-auto">
+                <div class="${theme.islandBg} rounded-[1.5rem] px-5 py-3 flex justify-between items-center transition-all duration-300 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="window.clearSelection()">
+                        <img src="${mainLogoUrl}" alt="Logo" class="h-10 w-auto" style="object-fit: contain;">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.toggleLang()" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${theme.btnBg} transition-colors hover:scale-105 active:scale-95">${state.lang === 'ar' ? 'EN' : 'AR'}</button>
+                        <button onclick="window.toggleTheme()" class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors hover:scale-105 active:scale-95 ${theme.btnBg}"><i data-lucide="${state.isDark ? 'sun' : 'moon'}" class="${state.isDark ? `text-[${C.softBlue}]` : `text-[${C.darkBlue}]`} w-5 h-5"></i></button>
+                        <button onclick="window.toggleShowFavs()" class="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${state.showFavorites ? 'bg-red-500/10 border-red-500/30' : theme.btnBg}">
+                            <i data-lucide="heart" class="w-5 h-5 ${state.showFavorites ? 'text-red-500 fill-red-500' : (state.isDark ? 'text-white' : `text-[${C.darkBlue}]`)}"></i>
+                            ${state.favorites.length > 0 && !state.showFavorites ? `<span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-[${state.isDark ? C.cardDark : 'white'}] rounded-full"></span>` : ''}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const renderFooter = (theme) => `
+            <footer dir="ltr" class="w-full pt-8 pb-6 mt-auto border-t flex flex-col items-center justify-center gap-2 relative z-10 ${state.isDark ? `border-white/5 bg-[${C.bgDark}]` : `border-[${C.borderLight}] bg-[${C.bgLight}]`}">
+                <div class="flex items-center gap-2 mb-1">
+                    <img src="${mainLogoUrl}" alt="Logo" class="h-8 w-auto">
+                </div>
+                <p class="text-sm ${theme.textMuted}">All rights reserved to <span class="font-bold text-[${C.primary}] mx-1">Saknk</span> &copy; ${new Date().getFullYear()}</p>
+                <div class="text-xs mt-1 px-4 py-1.5 rounded-full ${state.isDark ? 'bg-white/5 text-gray-400' : 'bg-white text-gray-600 shadow-sm'} flex items-center gap-1.5 backdrop-blur-sm border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
+                    Developed by <span class="font-black bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] bg-clip-text text-transparent tracking-widest ml-1">ELNENX</span>
+                </div>
+            </footer>
+        `;
+
+        const renderCompareModal = (theme) => {
+            if(!state.showCompareModal || state.compareList.length !== 2) return '';
+            const p1 = properties.find(p => p.id === state.compareList[0]);
+            const p2 = properties.find(p => p.id === state.compareList[1]);
+            
+            return `
+            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.closeCompareModal()"></div>
+                <div class="relative w-full max-w-4xl ${theme.islandBg} rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 duration-300 overflow-y-auto max-h-[90vh] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold ${theme.textMain}">${t('propertyCompare')} ⚖️</h2>
+                        <button onclick="window.closeCompareModal()" class="p-2 bg-white/10 rounded-full hover:bg-red-500/20 hover:text-red-500 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
+                            <img src="${p1.images[0]}" class="w-full h-40 object-cover rounded-xl">
+                            <h3 class="font-bold text-lg ${theme.textMain}">${p1.price} <span class="text-sm font-normal">${p1.currency[state.lang]}</span></h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('location')}</span> <span class="font-bold ${theme.textMain}">${p1.location[state.lang]}</span></div>
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('beds')}</span> <span class="font-bold ${theme.textMain}">${p1.beds}</span></div>
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${p1.baths}</span></div>
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${p1.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
+                            </div>
+                            <button onclick="window.selectProperty(${p1.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
+                        </div>
+                        <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
+                            <img src="${p2.images[0]}" class="w-full h-40 object-cover rounded-xl">
+                            <h3 class="font-bold text-lg ${theme.textMain}">${p2.price} <span class="text-sm font-normal">${p2.currency[state.lang]}</span></h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('location')}</span> <span class="font-bold ${theme.textMain}">${p2.location[state.lang]}</span></div>
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('beds')}</span> <span class="font-bold ${theme.textMain}">${p2.beds}</span></div>
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${p2.baths}</span></div>
+                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${p2.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
+                            </div>
+                            <button onclick="window.selectProperty(${p2.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        };
+
+        const renderChatbot = () => {
+            if(!state.isChatOpen) {
+                return `
+                <div class="fixed bottom-6 right-6 z-[90] animate-in fade-in zoom-in duration-300">
+                    <button onclick="window.toggleChat()" class="w-14 h-14 rounded-full bg-[${C.darkBlue}] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(57,88,134,0.4)] hover:scale-110 active:scale-95 transition-all">
+                        <i data-lucide="bot" class="w-7 h-7"></i>
+                        <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-[${C.primary}] border-2 border-[${C.bgDark}] rounded-full animate-ping"></span>
+                    </button>
+                </div>`;
+            }
+
+            const msgsHTML = state.chatMessages.map(msg => `
+                <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2">
+                    <div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user' ? `bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white rounded-tr-sm font-medium shadow-md` : `bg-[${C.cardDark}] text-white border border-white/10 rounded-tl-sm shadow-sm`}">
+                        ${msg.text}
+                    </div>
+                </div>
+            `).join('');
+
+            const quickReplies = state.chatMessages.length === 1 ? `
+                <div class="flex flex-col gap-2 mt-4">
+                    <button onclick="window.sendChatMessage(event, '${state.lang === 'ar' ? 'أبحث عن سكن طلاب' : 'Looking for student housing'}')" class="bg-[${C.cardDark}] text-gray-300 text-sm p-3 rounded-xl border border-white/10 hover:border-[${C.primary}] transition-colors text-right">
+                        ${state.lang === 'ar' ? '🏠 أبحث عن سكن طلاب' : '🏠 Looking for student housing'}
+                    </button>
+                    <button onclick="window.sendChatMessage(event, '${state.lang === 'ar' ? 'أبحث عن شقة في المرحلة الرابعة' : 'Looking for an apartment in Phase 4'}')" class="bg-[${C.cardDark}] text-gray-300 text-sm p-3 rounded-xl border border-white/10 hover:border-[${C.primary}] transition-colors text-right">
+                        ${state.lang === 'ar' ? '📍 أبحث عن شقة في المرحلة الرابعة' : '📍 Apartment in Phase 4'}
+                    </button>
+                </div>
+            ` : '';
+
+            return `
+            <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" dir="${state.lang === 'ar' ? 'rtl' : 'ltr'}">
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 cursor-pointer" onclick="window.closeChat()"></div>
+                <div class="relative w-full max-w-[360px] h-[680px] max-h-[85vh] bg-[${C.bgDark}] rounded-[3rem] border-[6px] border-[${C.primary}] shadow-[0_0_60px_rgba(99,142,203,0.3)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+                    <div class="absolute top-0 inset-x-0 h-7 flex justify-center z-50 pointer-events-none">
+                        <div class="w-32 h-full bg-[${C.primary}] rounded-b-[1.2rem] px-[2px] pb-[2px] pt-0">
+                            <div class="w-full h-full bg-black rounded-b-[1rem] flex items-center justify-center gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[${C.cardDark}] border border-white/5"></div>
+                                <div class="w-2 h-2 rounded-full bg-blue-900/40"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-10 pb-4 px-5 flex items-center justify-between bg-gradient-to-b from-[${C.cardDark}] to-[${C.bgDark}] border-b border-white/10 z-40 relative">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-[${C.primary}] flex items-center justify-center text-white shadow-lg relative">
+                                <i data-lucide="bot" class="w-5 h-5"></i>
+                                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[${C.cardDark}] rounded-full"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold text-sm">Saknk AI</h3>
+                                <p class="text-[${C.softBlue}] text-xs font-bold">Online</p>
+                            </div>
+                        </div>
+                        <button onclick="window.closeChat()" class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition active:scale-95"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[${C.bgDark}] hide-scrollbar">
+                        ${msgsHTML}
+                        ${quickReplies}
+                    </div>
+                    <div class="p-4 bg-[${C.cardDark}] border-t border-white/10 relative z-40">
+                        <form onsubmit="window.sendChatMessage(event)" class="flex gap-2 relative">
+                            <input type="text" oninput="window.updateChatInput(this.value)" value="${state.chatInput}" placeholder="${state.lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message...'}" class="flex-1 bg-black/50 text-white text-sm px-4 py-3.5 rounded-full border border-white/10 outline-none focus:border-[${C.primary}] transition-colors" />
+                            <button type="submit" class="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-[${C.primary}] text-white hover:scale-105 active:scale-95 shadow-lg shadow-[${C.primary}]/20">
+                                <i data-lucide="send" class="w-4 h-4 ${state.lang === 'ar' ? 'rotate-180 -ml-1' : 'ml-1'}"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>`;
+        };
+
+        const renderHome = () => {
+            const theme = getTheme();
+            const pwaHTML = renderPwaPrompt(theme); 
+            
+            let displayedProperties = properties.filter(p => {
+                if (state.showFavorites) return state.favorites.includes(p.id);
+                const matchLocation = p.demoLocation === state.activeLocation;
+                const matchPhase = state.activeLocation === 'newDemo' ? (state.activePhase === 'all' || p.phase === state.activePhase) : true;
+                return matchLocation && matchPhase;
+            });
+
+            // TabsHTML now uses flex-col and gap-3 to be part of the main flex flow
+            const tabsHTML = !state.showFavorites ? `
+                <div class="transition-all duration-500 animate-in fade-in slide-in-from-top-4 w-full flex flex-col gap-3">
+                    <div class="${theme.islandBg} rounded-[1.5rem] p-1.5 flex items-center justify-between border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
+                        <div class="flex w-full relative">
+                            <div class="absolute inset-y-0 w-1/2 bg-[${C.primary}] rounded-xl transition-all duration-300 ease-out shadow-md ${state.activeLocation === 'newDemo' ? (state.lang === 'ar' ? 'right-0' : 'left-0') : (state.lang === 'ar' ? 'right-1/2' : 'left-1/2')}"></div>
+                            <button onclick="window.setLocation('newDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'newDemo' ? 'text-white' : `${theme.textMuted} hover:${theme.textMain}`}">${t('newDemo')}</button>
+                            <button onclick="window.setLocation('oldDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'oldDemo' ? 'text-white' : `${theme.textMuted} hover:${theme.textMain}`}">${t('oldDemo')}</button>
+                        </div>
+                        <div class="w-[1px] h-6 mx-2 ${state.isDark ? 'bg-white/10' : `bg-[${C.borderLight}]`}"></div>
+                        <div class="flex bg-[${state.isDark ? 'black' : 'white'}]/20 p-1 rounded-xl ml-1 border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
+                            <button onclick="window.setViewMode('grid')" class="p-1.5 rounded-lg transition-colors ${state.viewMode==='grid' ? `bg-[${C.primary}] text-white shadow-md` : theme.textMuted}"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                            <button onclick="window.setViewMode('map')" class="p-1.5 rounded-lg transition-colors ${state.viewMode==='map' ? `bg-[${C.primary}] text-white shadow-md` : theme.textMuted}"><i data-lucide="map" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    ${state.activeLocation === 'newDemo' ? `
+                    <div class="${theme.islandBg} rounded-[1.2rem] p-1.5 flex items-center gap-1 overflow-x-auto hide-scrollbar snap-x animate-in slide-in-from-top-2 duration-300 border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
+                        <span class="text-xs font-bold whitespace-nowrap px-3 ${theme.textMuted}">${t('choosePhase')}:</span>
+                        <div class="flex gap-1">
+                            ${[{id:'all',l:t('all')}, {id:'phase1',l:t('phase1')}, {id:'phase2',l:t('phase2')}, {id:'phase3',l:t('phase3')}, {id:'phase4',l:t('phase4')}].map(ph => `
+                                <button onclick="window.setPhase('${ph.id}')" class="whitespace-nowrap snap-center px-4 py-2 text-sm font-bold rounded-xl transition-all duration-300 ${state.activePhase === ph.id ? `bg-[${C.primary}]/20 border border-[${C.primary}]/50 text-[${C.primary}] shadow-inner scale-100` : `${theme.btnBg} border-transparent ${theme.textMuted} hover:${theme.textMain} hover:scale-105`}">${ph.l}</button>
+                            `).join('')}
+                        </div>
+                    </div>` : ''}
+                </div>
+            ` : '';
+
+            const mapHTML = `
+                <div class="w-full h-[65vh] rounded-[2rem] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500 w-full">
+                    <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover ${state.isDark ? 'opacity-40 grayscale' : 'opacity-70'} mix-blend-overlay">
+                    <div class="absolute inset-0 bg-gradient-to-t ${state.isDark ? `from-[${C.bgDark}]/80` : `from-[${C.bgLight}]/50`} via-transparent"></div>
+                    
+                    ${displayedProperties.map(p => `
+                        <div class="absolute w-10 h-10 -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-10" style="top: ${p.mapCoords.top}; left: ${p.mapCoords.left};" onclick="window.setActivePin(${p.id})">
+                            <div class="relative flex items-center justify-center ${state.activePinId === p.id ? 'scale-125' : 'pin-bounce'} transition-transform">
+                                <div class="w-8 h-8 bg-[${C.primary}] rounded-full flex items-center justify-center text-white shadow-lg relative z-10 border-2 border-white">
+                                    <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                </div>
+                                <div class="absolute w-full h-full bg-[${C.primary}] rounded-full animate-ping opacity-50"></div>
+                            </div>
+                            
+                            <div class="absolute top-12 left-1/2 -translate-x-1/2 w-48 ${theme.islandBg} rounded-xl p-2 shadow-2xl transition-all duration-300 origin-top pointer-events-none border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} ${state.activePinId === p.id ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">
+                                <img src="${p.images[0]}" class="w-full h-20 object-cover rounded-lg mb-2">
+                                <p class="text-[10px] font-bold truncate ${theme.textMain} mb-1">${p.title[state.lang]}</p>
+                                <p class="text-sm font-black text-[${C.primary}]">${p.price} <span class="text-[10px] font-normal">${p.currency[state.lang]}</span></p>
+                                <button onclick="window.selectProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">التفاصيل</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const cardsHTML = displayedProperties.length === 0 ? `
+                <div class="col-span-full py-20 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4">
+                    <div class="w-32 h-32 bg-gradient-to-br from-[${C.primary}]/20 to-transparent rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(99,142,203,0.1)]">
+                        <i data-lucide="heart" class="w-16 h-16 text-[${C.primary}] opacity-80"></i>
+                    </div>
+                    <h3 class="text-2xl font-black mb-2 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] bg-clip-text text-transparent">${state.showFavorites ? t('noFavoritesTitle') : "لا توجد عقارات مطابقة"}</h3>
+                </div>
+            ` : displayedProperties.map((p, i) => `
+                <div class="animate-fade-up group relative ${theme.cardBg} rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 cursor-pointer self-start w-full" style="animation-delay: ${i*0.1}s" onclick="window.selectProperty(${p.id})">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] rounded-[2.5rem] opacity-0 group-hover:opacity-20 blur-xl transition duration-700 pointer-events-none"></div>
+                    <div class="relative h-60 overflow-hidden m-2 rounded-t-[1.5rem] rounded-b-xl z-10">
+                        <img src="${p.images[0]}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90"></div>
+                        <div class="absolute top-4 ${state.lang === 'ar' ? 'right-4' : 'left-4'} flex flex-col gap-2">
+                            ${p.featured ? `<span class="bg-[${C.primary}] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg backdrop-blur-md w-fit">${t('featured')}</span>` : ''}
+                        </div>
+                        <div class="absolute top-4 ${state.lang === 'ar' ? 'left-4' : 'right-4'} flex flex-col gap-2">
+                            <button class="p-2.5 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-all active:scale-90 ${state.favorites.includes(p.id) ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-black/40 border border-white/10'}" onclick="window.toggleFav(${p.id}, event)">
+                                <i data-lucide="heart" class="w-4 h-4 ${state.favorites.includes(p.id) ? 'fill-red-500 animate-in zoom-in duration-300' : ''}"></i>
+                            </button>
+                            <button class="p-2.5 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-all active:scale-90 ${state.compareList.includes(p.id) ? `bg-[${C.primary}]/20 text-[${C.primary}] border border-[${C.primary}]/30` : 'bg-black/40 border border-white/10'}" onclick="window.toggleCompare(${p.id}, event)">
+                                <i data-lucide="scale" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div class="absolute bottom-4 right-4 left-4 flex justify-between items-end">
+                            <div class="flex flex-col">
+                                <h3 class="text-white text-2xl font-black tracking-tight drop-shadow-lg">${p.price} <span class="text-sm font-medium text-gray-300">${p.currency[state.lang]}</span></h3>
+                                ${p.pricePerPerson ? `<span class="text-xs font-bold text-[#25D366] bg-black/50 backdrop-blur-md px-2 py-1 rounded-md mt-1 border border-[#25D366]/20 w-fit">${t('availableBed')} ${p.pricePerPerson} ${t('perPerson')}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-3 relative z-10">
+                        <h4 class="text-base font-bold mb-3 line-clamp-2 leading-relaxed ${theme.textMain} group-hover:text-[${C.primary}] transition-colors">${p.title[state.lang]}</h4>
+                        <div class="flex flex-wrap items-center gap-2 mb-4">
+                            <div class="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-bold border ${state.isDark ? 'bg-white/5 text-gray-300 border-white/5' : `bg-gray-50 text-[${C.darkBlue}] border-[${C.borderLight}]`}">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[${C.primary}]"></i><span>${p.location[state.lang]}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-bold border ${state.isDark ? 'bg-white/5 text-gray-300 border-white/5' : `bg-gray-50 text-[${C.darkBlue}] border-[${C.borderLight}]`}">
+                                <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-[${C.primary}]"></i><span>${p.gender === 'male' ? t('gender_male') : p.gender === 'female' ? t('gender_female') : t('gender_family')}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 py-4 mb-2 rounded-2xl px-4 justify-around border ${state.isDark ? `bg-[${C.bgDark}]/60 border-white/5` : `bg-gray-50 border-[${C.borderLight}]`}">
+                            <div class="flex flex-col items-center gap-1"><i data-lucide="bed" class="w-4 h-4 text-[${C.primary}]"></i><span class="text-sm font-bold ${theme.textMain}">${p.beds}</span></div>
+                            <div class="w-[1px] h-8 ${state.isDark ? 'bg-white/10' : `bg-[${C.borderLight}]`}"></div>
+                            <div class="flex flex-col items-center gap-1"><i data-lucide="bath" class="w-4 h-4 text-[${C.primary}]"></i><span class="text-sm font-bold ${theme.textMain}">${p.baths}</span></div>
+                            <div class="w-[1px] h-8 ${state.isDark ? 'bg-white/10' : `bg-[${C.borderLight}]`}"></div>
+                            <div class="flex flex-col items-center gap-1"><i data-lucide="maximize" class="w-4 h-4 text-[${C.primary}]"></i><span class="text-sm font-bold ${theme.textMain}">${p.area} ${state.lang === 'ar' ? 'م²' : 'm²'}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const reelsHTML = (!state.showFavorites && displayedProperties.length > 0 && state.viewMode === 'grid') ? `
+                <div class="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 w-full pt-4">
+                    <h3 class="text-2xl font-bold mb-4 px-2 ${theme.textMain}">${t('reelsTitle')}</h3>
+                    <div class="flex overflow-x-auto gap-4 pb-4 px-2 snap-x hide-scrollbar">
+                        ${reelsData.map(reel => `
+                            <div class="min-w-[160px] w-[160px] h-[280px] snap-center rounded-3xl overflow-hidden border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative group cursor-pointer shadow-lg hover:-translate-y-2 transition-transform">
+                                <img src="${reel.image}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform border border-white/30">
+                                        <i data-lucide="play-circle" class="w-6 h-6 fill-white/50"></i>
+                                    </div>
+                                </div>
+                                <div class="absolute bottom-4 left-3 right-3 text-center">
+                                    <p class="text-white text-xs font-bold line-clamp-2 leading-relaxed">${reel.title}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            const formHTML = !state.showFavorites ? `
+                <div class="${theme.cardBg} rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500 w-full">
+                    <div class="absolute top-0 ${state.lang === 'ar' ? 'right-0' : 'left-0'} w-40 h-40 bg-[${C.primary}]/10 rounded-full blur-[60px]"></div>
+                    <h3 class="text-2xl font-black mb-2 relative z-10 ${theme.textMain}">${t('contactUs')}</h3>
+                    <p class="text-sm mb-6 relative z-10 ${theme.textMuted}">${t('contactDesc')}</p>
+                    <form class="space-y-5 relative z-10" onsubmit="window.submitForm(event)">
+                        <div>
+                            <label class="block text-sm font-bold mb-3 ${theme.textMain}">${t('iAm')}</label>
+                            <div class="flex gap-3">
+                                <button type="button" onclick="window.setContactType('tenant')" class="flex-1 py-3.5 text-sm font-bold rounded-xl border transition-all ${state.contactType === 'tenant' ? `bg-[${C.primary}] border-[${C.primary}] text-white shadow-lg shadow-[${C.primary}]/30 scale-[1.02]` : `${state.isDark ? `bg-[${C.bgDark}]/50 border-white/10` : `bg-white border-[${C.borderLight}]`} ${theme.textMuted} hover:${theme.textMain}`}">${t('tenant')}</button>
+                                <button type="button" onclick="window.setContactType('owner')" class="flex-1 py-3.5 text-sm font-bold rounded-xl border transition-all ${state.contactType === 'owner' ? `bg-[${C.primary}] border-[${C.primary}] text-white shadow-lg shadow-[${C.primary}]/30 scale-[1.02]` : `${state.isDark ? `bg-[${C.bgDark}]/50 border-white/10` : `bg-white border-[${C.borderLight}]`} ${theme.textMuted} hover:${theme.textMain}`}">${t('owner')}</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <input type="text" required placeholder="${t('name')}" class="w-full p-4 rounded-xl border outline-none font-medium transition-all ${theme.inputBg}" />
+                            <div class="flex items-center p-1.5 rounded-xl border transition-all ${theme.inputWrapperBg}">
+                                <div class="flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-2.5 rounded-lg shadow-sm" dir="ltr">
+                                    <i data-lucide="message-circle" class="w-4 h-4 fill-white"></i><span class="font-bold text-sm">+20</span>
+                                </div>
+                                <input type="tel" required placeholder="${t('phone')}" class="flex-1 bg-transparent text-sm font-medium outline-none px-3" dir="ltr" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <select required class="w-full p-4 rounded-xl border outline-none font-medium transition-all appearance-none cursor-pointer ${theme.inputBg}">
+                                    <option value="" disabled selected hidden>${state.contactType === 'tenant' ? t('desiredPhase') : t('userType')}</option>
+                                    ${state.contactType === 'tenant' 
+                                        ? `<option value="1">الأولى</option><option value="2">الثانية</option><option value="3">الثالثة</option><option value="4">الرابعة</option>` 
+                                        : `<option value="landlord">${t('landlord')}</option><option value="broker">${t('broker')}</option>`}
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-[0.98] transition-all shadow-[0_8px_30px_rgba(99,142,203,0.3)] mt-2">${t('send')}</button>
+                    </form>
+                </div>
+            ` : '';
+
+            // Using gap-5 strictly inside <main> to keep perfect spacing
+            return `
+                <main class="flex-1 px-4 pt-[104px] pb-12 flex flex-col gap-5 relative z-10 max-w-7xl mx-auto w-full">
+                    ${pwaHTML}
+                    ${tabsHTML}
+                    <div class="flex justify-between items-end px-2 pt-2">
+                        <h2 class="text-2xl font-black tracking-tight ${theme.textMain}">${state.showFavorites ? t('favorites') : (state.activeLocation === 'newDemo' ? t('newDemoTitle') : t('oldDemoTitle'))}</h2>
+                    </div>
+                    
+                    ${state.viewMode === 'grid' ? `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 w-full">
+                            ${cardsHTML}
+                        </div>
+                    ` : mapHTML}
+
+                    ${reelsHTML}
+                    ${formHTML}
+                </main>
+            `;
+        };
+
+        const renderPropertyDetails = () => {
+            const theme = getTheme();
+            const p = properties.find(prop => prop.id === state.selectedPropertyId);
+            if(!p) return '';
+            
+            const genderLabel = p.gender === 'male' ? t('gender_male') : p.gender === 'female' ? t('gender_female') : t('gender_family');
+            
+            const suggestedProps = properties.filter(sp => sp.id !== state.selectedPropertyId && sp.featured).slice(0, 3);
+            const recommendedHTML = suggestedProps.length > 0 ? `
+                <div class="border-t pt-8 border-[${C.borderLight}]/50 animate-in slide-in-from-bottom-8 duration-700 w-full">
+                    <h3 class="text-2xl font-bold mb-6 ${theme.textMain}">${t('recommended')}</h3>
+                    <div class="flex overflow-x-auto gap-4 pb-6 snap-x hide-scrollbar">
+                        ${suggestedProps.map(sProp => `
+                            <div onclick="window.selectProperty(${sProp.id})" class="min-w-[280px] w-[280px] snap-center rounded-[2rem] overflow-hidden border ${theme.cardBg} hover:-translate-y-2 transition-transform cursor-pointer">
+                                <div class="h-40 relative">
+                                    <img src="${sProp.images[0]}" class="w-full h-full object-cover" />
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                    <div class="absolute top-3 right-3">
+                                        <span class="bg-[${C.primary}] text-white text-[10px] font-bold px-2 py-1 rounded-lg">${t('featured')}</span>
+                                    </div>
+                                    <div class="absolute bottom-3 left-4 right-4">
+                                        <h4 class="font-bold text-white text-lg">${sProp.price} <span class="text-xs font-normal text-gray-300">${sProp.currency[state.lang]}</span></h4>
+                                    </div>
+                                </div>
+                                <div class="p-4 pt-3">
+                                    <p class="text-sm font-bold truncate mb-3 ${theme.textMain}">${sProp.title[state.lang]}</p>
+                                    <div class="flex items-center gap-2 text-xs pt-3 border-t font-bold ${state.isDark ? 'border-white/10 text-gray-300' : `border-[${C.borderLight}] text-[${C.darkBlue}]`}">
+                                        <i data-lucide="bed" class="w-3.5 h-3.5 text-[${C.primary}]"></i> ${sProp.beds}
+                                        <i data-lucide="bath" class="w-3.5 h-3.5 text-[${C.primary}] ${state.lang === 'ar' ? 'mr-2' : 'ml-2'}"></i> ${sProp.baths}
+                                        <i data-lucide="maximize" class="w-3.5 h-3.5 text-[${C.primary}] ${state.lang === 'ar' ? 'mr-2' : 'ml-2'}"></i> ${sProp.area} ${state.lang === 'ar' ? 'م²' : 'm²'}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            return `
+            <div class="relative h-[65vh] w-full rounded-b-[3rem] overflow-hidden shadow-2xl shrink-0 z-10 group mt-0 max-w-7xl mx-auto">
+                <img src="${p.images[state.imageIndex]}" class="w-full h-full object-cover animate-in fade-in duration-500" />
+                <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent ${state.isDark ? `to-[${C.bgDark}]` : `to-[${C.bgLight}]`}"></div>
+                
+                ${p.images.length > 1 ? `
+                    <button onclick="window.prevImage(event, ${p.images.length})" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[${C.primary}] hover:text-white transition-colors z-20"><i data-lucide="chevron-left"></i></button>
+                    <button onclick="window.nextImage(event, ${p.images.length})" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[${C.primary}] hover:text-white transition-colors z-20"><i data-lucide="chevron-right"></i></button>
+                    <div class="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1 z-20">
+                        <i data-lucide="camera" class="w-3.5 h-3.5"></i> ${state.imageIndex + 1} / ${p.images.length}
+                    </div>
+                ` : ''}
+
+                <div class="absolute top-6 left-6 right-6 flex justify-between items-center z-20 pt-4">
+                    <button onclick="window.clearSelection()" class="w-12 h-12 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-105 active:scale-95 transition shadow-lg">
+                        <i data-lucide="${state.lang === 'ar' ? 'arrow-right' : 'arrow-left'}" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex gap-3">
+                        <button class="px-4 h-12 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center gap-2 text-white hover:bg-[${C.primary}] transition shadow-lg font-bold text-sm">
+                            <i data-lucide="navigation" class="w-4 h-4"></i> ${t('tour360')}
+                        </button>
+                        <button onclick="window.toggleFav(${p.id}, event)" class="w-12 h-12 backdrop-blur-xl border rounded-2xl flex items-center justify-center transition shadow-lg active:scale-95 ${state.favorites.includes(p.id) ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'bg-black/40 border-white/10 text-white hover:bg-white hover:text-red-500'}">
+                            <i data-lucide="heart" class="w-5 h-5 ${state.favorites.includes(p.id) ? 'fill-red-500 animate-in zoom-in duration-300' : ''}"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <main class="px-4 sm:px-6 -mt-16 relative z-20 flex-1 flex flex-col gap-6 max-w-4xl mx-auto w-full pb-12">
+                <div class="${theme.islandBg} rounded-[2rem] p-6 shadow-md animate-in slide-in-from-bottom-8 duration-700 w-full">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="inline-block bg-[${C.primary}] text-white text-xs font-bold px-4 py-1.5 rounded-xl mb-3 shadow-[0_4px_15px_rgba(99,142,203,0.3)]">${p.type[state.lang]} • ${p.demoLocation === 'newDemo' ? t('newDemo') : t('oldDemo')}</span>
+                            <h1 class="text-3xl font-black mb-1 leading-tight ${theme.textMain}">${p.price} <span class="text-lg font-medium ${theme.textMuted}">${p.currency[state.lang]}</span></h1>
+                            ${p.pricePerPerson ? `<div class="inline-flex items-center gap-1.5 text-xs font-bold text-[#25D366] bg-[#25D366]/10 px-2.5 py-1 rounded-md mb-2"><i data-lucide="check" class="w-3.5 h-3.5"></i> ${t('availableBed')} ${p.pricePerPerson} ${t('perPerson')}</div>` : ''}
+                        </div>
+                        <div class="p-2.5 rounded-xl border ${state.isDark ? 'bg-black/50 border-white/5' : 'bg-gray-100 border-gray-200'}">
+                            <span class="font-mono text-xs font-bold text-[${C.primary}]">#${t('ref')}-${p.id}42</span>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold leading-relaxed mb-4 ${theme.textMain}">${p.title[state.lang]}</h2>
+                    
+                    <div class="flex flex-wrap gap-2 mb-5 pb-5 border-b border-gray-500/20">
+                        ${p.trustBadges[state.lang].map(badge => `
+                            <span class="text-xs font-bold px-3 py-1.5 rounded-lg border ${state.isDark ? `bg-[${C.darkBlue}]/30 text-[${C.softBlue}] border-[${C.darkBlue}]/50` : `bg-[${C.softBlue}]/30 text-[${C.darkBlue}] border-[${C.softBlue}]`}">${badge}</span>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 mb-5">
+                        <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl border ${state.isDark ? `bg-black/40 border-[${C.primary}]/30 text-gray-200` : `bg-[${C.primary}]/10 border-[${C.primary}]/20 text-gray-800`}">
+                            <i data-lucide="graduation-cap" class="w-4 h-4 text-[${C.primary}]"></i><span class="text-sm font-bold">${genderLabel}</span>
+                        </div>
+                        ${p.occupancy ? `
+                        <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl border ${state.isDark ? `bg-black/40 border-[${C.primary}]/30 text-gray-200` : `bg-[${C.primary}]/10 border-[${C.primary}]/20 text-gray-800`}">
+                            <i data-lucide="users" class="w-4 h-4 text-[${C.primary}]"></i><span class="text-sm font-bold"><span class="text-[${C.primary}]">${p.occupancy.current}</span> / ${p.occupancy.total} ${t('occupants')}</span>
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="flex flex-col items-center justify-center border py-4 rounded-2xl ${state.isDark ? 'bg-black/40 border-white/5' : `bg-gray-50 border-[${C.borderLight}]`}"><i data-lucide="bed" class="w-5 h-5 text-[${C.primary}] mb-2"></i><span class="text-xl font-bold ${theme.textMain}">${p.beds}</span><span class="text-[11px] uppercase tracking-wide mt-1 ${theme.textMuted}">${t('beds')}</span></div>
+                        <div class="flex flex-col items-center justify-center border py-4 rounded-2xl ${state.isDark ? 'bg-black/40 border-white/5' : `bg-gray-50 border-[${C.borderLight}]`}"><i data-lucide="bath" class="w-5 h-5 text-[${C.primary}] mb-2"></i><span class="text-xl font-bold ${theme.textMain}">${p.baths}</span><span class="text-[11px] uppercase tracking-wide mt-1 ${theme.textMuted}">${t('baths')}</span></div>
+                        <div class="flex flex-col items-center justify-center border py-4 rounded-2xl ${state.isDark ? 'bg-black/40 border-white/5' : `bg-gray-50 border-[${C.borderLight}]`}"><i data-lucide="maximize" class="w-5 h-5 text-[${C.primary}] mb-2"></i><span class="text-xl font-bold ${theme.textMain}">${p.area}</span><span class="text-[11px] uppercase tracking-wide mt-1 ${theme.textMuted}">${t('area')}</span></div>
+                    </div>
+                </div>
+
+                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-100 w-full">
+                    <h3 class="text-xl font-bold mb-4 ${theme.textMain}">${t('neighborhood')}</h3>
+                    <div class="rounded-[2rem] border overflow-hidden ${theme.cardBg}">
+                        <div class="relative h-48 w-full bg-[${C.bgDark}]">
+                            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-50 mix-blend-overlay" />
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-12 h-12 bg-[${C.primary}]/20 rounded-full flex items-center justify-center animate-pulse">
+                                    <div class="w-8 h-8 bg-[${C.primary}] rounded-full flex items-center justify-center shadow-lg"><i data-lucide="map-pin" class="w-4 h-4 text-white"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                ${p.pois ? p.pois.map(poi => `
+                                    <div class="flex items-center justify-between p-3 rounded-xl border ${state.isDark ? 'bg-black/30 border-white/5' : 'bg-gray-50 border-gray-100'}">
+                                        <div class="flex items-center gap-3">
+                                            <div class="p-2 rounded-lg ${state.isDark ? 'bg-white/5' : 'bg-white shadow-sm'}"><i data-lucide="${poi.icon}" class="w-4 h-4 text-[${C.primary}]"></i></div>
+                                            <span class="text-sm font-bold ${theme.textMain}">${poi[state.lang]}</span>
+                                        </div>
+                                        <span class="text-xs font-bold px-2 py-1 rounded-md ${state.isDark ? `bg-white/5 text-[${C.primary}]` : `bg-[${C.softBlue}] text-[${C.darkBlue}]`}">${poi.time}</span>
+                                    </div>
+                                `).join('') : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-150 w-full">
+                    <h3 class="text-xl font-bold mb-4 ${theme.textMain}">${t('amenities')}</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        ${p.features[state.lang].map(f => `
+                            <div class="flex flex-col items-center justify-center p-4 rounded-2xl border ${theme.cardBg}">
+                                <i data-lucide="${getFeatureIcon(f)}" class="w-5 h-5 text-[${C.primary}] mb-2"></i>
+                                <span class="text-sm font-bold ${theme.textMain} text-center">${f}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div id="dock-target" class="w-full h-[76px] relative z-50">
+                    <div id="dock-content" class="fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-100">
+                        <div class="${theme.islandBg} p-2.5 rounded-3xl flex gap-2 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                            <button class="flex-1 bg-[#25D366] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                <i data-lucide="message-circle" class="w-5 h-5"></i><span>${t('whatsapp')}</span>
+                            </button>
+                            <button class="flex-1 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[${C.primary}]/30 hover:scale-[1.02] active:scale-95 transition-all">
+                                <i data-lucide="phone" class="w-5 h-5"></i><span>${t('callNow')}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-200 w-full">
+                    <div class="border rounded-2xl p-5 flex items-center justify-between shadow-lg ${state.isDark ? `border-white/5 bg-gradient-to-r from-[${C.cardDark}] to-[${C.bgDark}]` : `border-[${C.borderLight}] bg-white`}">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 bg-black rounded-full flex items-center justify-center border-2 border-[${C.primary}] p-1 relative">
+                                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.agent.name)}&background=152033&color=638ECB" class="w-full h-full rounded-full" />
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <h4 class="font-bold text-base ${theme.textMain}">${p.agent.name}</h4>
+                                    ${p.agent.verified ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-[#10B981]"></i>' : ''}
+                                </div>
+                                <div class="flex items-center gap-1 text-xs font-medium ${theme.textMuted}">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[${C.primary}]"></i><span>${t('verifiedAgent')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-2 rounded-xl text-center border ${state.isDark ? 'bg-white/5 border-white/5' : `bg-gray-50 border-[${C.borderLight}]`}">
+                            <span class="flex items-center gap-1 text-sm font-bold ${theme.textMain}"><i data-lucide="star" class="w-3 h-3 text-yellow-500 fill-yellow-500"></i> ${p.agent.rate}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-300 w-full">
+                    <h3 class="text-xl font-bold mb-4 ${theme.textMain}">${t('propertyDetails')}</h3>
+                    <p class="text-sm leading-loose ${theme.textMuted}">${t('description')}</p>
+                </div>
+
+                ${recommendedHTML}
+
+            </main>
+            `;
+        };
+
+        const renderApp = () => {
+            const theme = getTheme();
+            document.body.className = `${theme.bgMain} ${theme.textMain} transition-colors duration-500`;
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="min-h-screen flex flex-col relative overflow-x-hidden pb-0">
+                    ${renderAmbientGlow()}
+                    ${!state.selectedPropertyId ? renderHeader(theme) : ''}
+                    ${!state.selectedPropertyId ? renderHome() : renderPropertyDetails()}
+                    ${renderFooter(theme)}
+                    ${renderChatbot()}
+                    ${renderCompareModal(theme)}
+                </div>
+            `;
+            
+            lucide.createIcons();
+
+            if(state.selectedPropertyId) {
+                const target = document.getElementById('dock-target');
+                const content = document.getElementById('dock-content');
+                if(target && content) {
+                    window.onscroll = () => {
+                        const rect = target.getBoundingClientRect();
+                        if(rect.top <= window.innerHeight - 24) {
+                            content.className = "relative transition-all duration-100";
+                        } else {
+                            content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-100 z-50";
+                        }
+                    };
+                    window.onscroll(); 
+                }
+            } else {
+                window.onscroll = null;
+            }
+        };
+
+        // --- Init ---
+        renderApp();
+    </script>
+</body>
+  </html>
