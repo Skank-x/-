@@ -16,34 +16,45 @@
 
     <style>
         body { font-family: 'Tajawal', sans-serif; overflow-x: hidden; }
+        
+        /* Scrollbar Hiding */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
+        /* Animations */
         @keyframes float {
           0%, 100% { transform: translateY(0) scale(1); }
           50% { transform: translateY(-20px) scale(1.05); }
         }
+        
         @keyframes fadeUpStagger {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        
         .animate-fade-up {
           animation: fadeUpStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           opacity: 0;
         }
-        .glass-heavy {
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-        }
-        .blend-multiply { mix-blend-mode: multiply; }
-        .blend-screen { mix-blend-mode: screen; }
         
-        .pin-bounce { animation: pinBounce 2s infinite; }
         @keyframes pinBounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
+        .pin-bounce { animation: pinBounce 2s infinite; }
         
+        /* UI Effects */
+        .glass-heavy {
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+        }
+        
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        
+        /* Prose styling for chatbot */
         .prose strong { color: #638ECB; font-weight: 800; }
         .prose ul { list-style-type: disc; margin-right: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
         .prose li { margin-bottom: 0.25rem; }
@@ -55,107 +66,129 @@
     <div id="app" class="flex-1 flex flex-col w-full"></div>
 
     <script>
-        // --- 1. Data & Translations ---
-        const translations = {
-          ar: {
-            appName: "سكنك", login: "إنشاء حساب", changeLang: "تغيير اللغة", arabic: "العربية", english: "English",
-            newDemo: "ديمو الجديدة", oldDemo: "ديمو القديمة", newDemoTitle: "عقارات ديمو الجديدة", oldDemoTitle: "عقارات ديمو القديمة",
-            choosePhase: "اختر المرحلة", all: "الكل", phase1: "الأولى", phase2: "الثانية", phase3: "الثالثة", phase4: "الرابعة",
-            curated: "مختارات مصممة خصيصاً لك", results: "نتائج", featured: "مميز", beds: "غرف", baths: "حمامات", area: "متر",
-            ref: "رقم مرجعي", location: "الموقع", amenities: "المرافق", verifiedAgent: "وكيل معتمد", propertyDetails: "تفاصيل العقار",
-            neighborhood: "الموقع والأماكن القريبة", description: "اكتشف الفخامة في هذا العقار الرائع المصمم لتلبية أرقى معايير الحياة العصرية. يتميز بتشطيبات راقية، إضاءة طبيعية ممتازة، وموقع استراتيجي يضمن لك الراحة والهدوء.",
-            recommended: "عقارات مميزة", whatsapp: "واتساب", callNow: "إتصل الآن", gender_male: "سكن طلاب", gender_female: "سكن طالبات",
-            gender_family: "سكن عائلات", occupants: "أفراد", contactUs: "تواصل معنا", contactDesc: "نحن هنا لمساعدتك في إيجاد سكنك المثالي أو عرض عقارك.",
-            name: "الاسم بالكامل", phone: "رقم الواتساب", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
-            userType: "صفتي", landlord: "مالك العقار", broker: "سمسار / شركة تسويق", send: "إرسال الطلب", favorites: "المفضلة",
-            noFavoritesTitle: "قائمتك فارغة", noFavoritesDesc: "لم تقم بإضافة أي عقارات للمفضلة بعد. اكتشف العقارات المميزة واضغط على علامة القلب 🤍",
-            toastFavAdd: "تمت الإضافة للمفضلة بنجاح 🤍", toastFavRemove: "تم الإزالة من المفضلة", toastFormSuccess: "تم إرسال طلبك بنجاح ✅ سنتواصل معك قريباً.",
-            tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", filters: "تصفية", priceRange: "نطاق السعر", applyFilters: "تطبيق",
-            mapView: "خريطة", gridView: "قائمة", compare: "مقارنة", addCompare: "أضف للمقارنة", compareLimit: "تم تحديد عقارين", compareNow: "قارن الآن",
-            propertyCompare: "مقارنة العقارات", distanceToUni: "البعد عن الجامعة", addToHome: "أضف سكنك للشاشة الرئيسية", addToHomeDesc: "للوصول السريع وتجربة تشبه التطبيق",
-            addToHomeBtn: "إضافة"
-          },
-          en: {
-            appName: "Saknk", login: "Sign up", changeLang: "Change Language", arabic: "العربية", english: "English",
-            newDemo: "New Demo", oldDemo: "Old Demo", newDemoTitle: "New Demo Properties", oldDemoTitle: "Old Demo Properties",
-            choosePhase: "Choose Phase", all: "All", phase1: "First", phase2: "Second", phase3: "Third", phase4: "Fourth",
-            curated: "Curated specially for you", results: "Results", featured: "Featured", beds: "Beds", baths: "Baths", area: "SQM",
-            ref: "Ref", location: "Location", amenities: "Amenities", verifiedAgent: "Verified Agent", propertyDetails: "Property Details",
-            neighborhood: "Neighborhood", description: "Discover luxury in this exquisite property designed to meet the highest standards of modern living. Featuring premium finishes, excellent natural lighting, and a strategic location ensuring comfort and tranquility.",
-            recommended: "Featured Properties", whatsapp: "WhatsApp", callNow: "Call Now", gender_male: "Male Students", gender_female: "Female Students",
-            gender_family: "Families", occupants: "Persons", contactUs: "Contact Us", contactDesc: "We are here to help you find your perfect home or list your property.",
-            name: "Full Name", phone: "WhatsApp Number", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
-            userType: "My Role", landlord: "Property Owner", broker: "Broker", send: "Submit Request", favorites: "Favorites",
-            noFavoritesTitle: "Your List is Empty", noFavoritesDesc: "You haven't added any properties to your favorites yet. Explore and click the heart icon 🤍",
-            toastFavAdd: "Added to favorites successfully 🤍", toastFavRemove: "Removed from favorites", toastFormSuccess: "Request sent successfully ✅ We will contact you soon.",
-            tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", filters: "Filters", priceRange: "Price Range", applyFilters: "Apply",
-            mapView: "Map", gridView: "List", compare: "Compare", addCompare: "Add to Compare", compareLimit: "2 properties selected", compareNow: "Compare Now",
-            propertyCompare: "Property Comparison", distanceToUni: "Distance to Uni", addToHome: "Add Saknk to Home Screen", addToHomeDesc: "For fast access and app-like experience",
-            addToHomeBtn: "Add"
-          }
-        };
-
+        // --- 1. Constants & Styling ---
         const C = {
-            bgLight: '#F0F3FA', borderLight: '#D5DEEF', softBlue: '#B1C9EF', midBlue: '#8AAEE0', primary: '#638ECB', darkBlue: '#395886',
+            bgLight: '#F0F3FA', borderLight: '#D5DEEF', softBlue: '#B1C9EF', 
+            midBlue: '#8AAEE0', primary: '#638ECB', darkBlue: '#395886',
             bgDark: '#0b1221', cardDark: '#152033'  
         };
         
         const mainLogoUrl = "https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png"; 
 
+        // --- 2. Data & Translations ---
+        const translations = {
+            ar: {
+                appName: "سكنك", login: "إنشاء حساب", changeLang: "تغيير اللغة", arabic: "العربية", english: "English",
+                newDemo: "ديمو الجديدة", oldDemo: "ديمو القديمة", newDemoTitle: "عقارات ديمو الجديدة", oldDemoTitle: "عقارات ديمو القديمة",
+                choosePhase: "اختر المرحلة", all: "الكل", phase1: "الأولى", phase2: "الثانية", phase3: "الثالثة", phase4: "الرابعة",
+                curated: "مختارات مصممة خصيصاً لك", results: "نتائج", featured: "مميز", beds: "غرف", baths: "حمامات", area: "متر",
+                ref: "رقم مرجعي", location: "الموقع", amenities: "المرافق", verifiedAgent: "وكيل معتمد", propertyDetails: "تفاصيل العقار",
+                neighborhood: "الموقع والأماكن القريبة", description: "اكتشف الفخامة في هذا العقار الرائع المصمم لتلبية أرقى معايير الحياة العصرية. يتميز بتشطيبات راقية، إضاءة طبيعية ممتازة، وموقع استراتيجي يضمن لك الراحة والهدوء.",
+                recommended: "عقارات مميزة", whatsapp: "واتساب", callNow: "إتصل الآن", gender_male: "سكن طلاب", gender_female: "سكن طالبات",
+                gender_family: "سكن عائلات", occupants: "أفراد", contactUs: "تواصل معنا", contactDesc: "نحن هنا لمساعدتك في إيجاد سكنك المثالي أو عرض عقارك.",
+                name: "الاسم بالكامل", phone: "رقم الواتساب", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
+                userType: "صفتي", landlord: "مالك العقار", broker: "سمسار / شركة تسويق", send: "إرسال الطلب", favorites: "المفضلة",
+                noFavoritesTitle: "قائمتك فارغة", noFavoritesDesc: "لم تقم بإضافة أي عقارات للمفضلة بعد. اكتشف العقارات المميزة واضغط على علامة القلب 🤍",
+                toastFavAdd: "تمت الإضافة للمفضلة بنجاح 🤍", toastFavRemove: "تم الإزالة من المفضلة", toastFormSuccess: "تم إرسال طلبك بنجاح ✅ سنتواصل معك قريباً.",
+                tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", filters: "تصفية", priceRange: "نطاق السعر", applyFilters: "تطبيق",
+                mapView: "خريطة", gridView: "قائمة", compare: "مقارنة", addCompare: "أضف للمقارنة", compareLimit: "تم تحديد عقارين", compareNow: "قارن الآن",
+                propertyCompare: "مقارنة العقارات", distanceToUni: "البعد عن الجامعة", addToHome: "أضف سكنك للشاشة الرئيسية", addToHomeDesc: "للوصول السريع وتجربة تشبه التطبيق",
+                addToHomeBtn: "إضافة"
+            },
+            en: {
+                appName: "Saknk", login: "Sign up", changeLang: "Change Language", arabic: "العربية", english: "English",
+                newDemo: "New Demo", oldDemo: "Old Demo", newDemoTitle: "New Demo Properties", oldDemoTitle: "Old Demo Properties",
+                choosePhase: "Choose Phase", all: "All", phase1: "First", phase2: "Second", phase3: "Third", phase4: "Fourth",
+                curated: "Curated specially for you", results: "Results", featured: "Featured", beds: "Beds", baths: "Baths", area: "SQM",
+                ref: "Ref", location: "Location", amenities: "Amenities", verifiedAgent: "Verified Agent", propertyDetails: "Property Details",
+                neighborhood: "Neighborhood", description: "Discover luxury in this exquisite property designed to meet the highest standards of modern living. Featuring premium finishes, excellent natural lighting, and a strategic location ensuring comfort and tranquility.",
+                recommended: "Featured Properties", whatsapp: "WhatsApp", callNow: "Call Now", gender_male: "Male Students", gender_female: "Female Students",
+                gender_family: "Families", occupants: "Persons", contactUs: "Contact Us", contactDesc: "We are here to help you find your perfect home or list your property.",
+                name: "Full Name", phone: "WhatsApp Number", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
+                userType: "My Role", landlord: "Property Owner", broker: "Broker", send: "Submit Request", favorites: "Favorites",
+                noFavoritesTitle: "Your List is Empty", noFavoritesDesc: "You haven't added any properties to your favorites yet. Explore and click the heart icon 🤍",
+                toastFavAdd: "Added to favorites successfully 🤍", toastFavRemove: "Removed from favorites", toastFormSuccess: "Request sent successfully ✅ We will contact you soon.",
+                tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", filters: "Filters", priceRange: "Price Range", applyFilters: "Apply",
+                mapView: "Map", gridView: "List", compare: "Compare", addCompare: "Add to Compare", compareLimit: "2 properties selected", compareNow: "Compare Now",
+                propertyCompare: "Property Comparison", distanceToUni: "Distance to Uni", addToHome: "Add Saknk to Home Screen", addToHomeDesc: "For fast access and app-like experience",
+                addToHomeBtn: "Add"
+            }
+        };
+
         const properties = [
-          {
-            id: 1, title: { ar: "شقة مودرن فاخرة مفروشة بالكامل بإطلالة بانورامية", en: "Modern fully furnished apartment with panoramic view" },
-            location: { ar: "ديمو الجديدة، المرحلة الأولى", en: "New Demo, First Phase" }, price: "25,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
-            pricePerPerson: "6,250", beds: 2, baths: 1, area: 85, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 2, total: 4 },
-            demoLocation: "newDemo", phase: "phase1", featured: true, images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
-            agent: { name: "Diamond Luxury", verified: true, rate: 4.9 }, features: { ar: ["واي فاي", "تكييف", "غسالة", "مطبخ", "جيم"], en: ["Wi-Fi", "AC", "Washing Machine", "Kitchen", "Gym"] },
-            trustBadges: { ar: ["شامل الفواتير", "بدون عمولة"], en: ["Bills Included", "No Commission"] },
-            pois: [{ icon: 'graduation-cap', ar: "الجامعة (2 كم)", en: "University (2 km)", time: "5 min" }],
-            mapCoords: { top: '35%', left: '45%' }
-          },
-          {
-            id: 2, title: { ar: "شقة 100 متر 2 غرف بتشطيبات الترا سوبر لوكس", en: "100 SQM 2-Bedroom Ultra Super Lux Appt" },
-            location: { ar: "ديمو القديمة، القاهرة", en: "Old Demo, Cairo" }, price: "47,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
-            pricePerPerson: "23,500", beds: 2, baths: 2, area: 100, type: { ar: "شقة", en: "Apartment" }, gender: "female", occupancy: { current: 1, total: 2 },
-            demoLocation: "oldDemo", featured: false, images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
-            agent: { name: "TruBroker™", verified: true, rate: 4.7 }, features: { ar: ["تكييف", "مطبخ", "حديقة", "أمن"], en: ["AC", "Kitchen", "Garden", "Security"] },
-            trustBadges: { ar: ["أمن 24 ساعة", "عقار موثق"], en: ["24/7 Security", "Verified"] },
-            pois: [{ icon: 'graduation-cap', ar: "الجامعة (5 كم)", en: "University (5 km)", time: "15 min" }],
-            mapCoords: { top: '55%', left: '70%' }
-          },
-          {
-            id: 3, title: { ar: "شقة (سمارت هوم) مفروشة بالكامل - الخيار الأمثل", en: "Smart Home Fully Furnished Appt - Perfect Choice" },
-            location: { ar: "ديمو الجديدة، المرحلة الثانية", en: "New Demo, Second Phase" }, price: "100,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
-            beds: 3, baths: 3, area: 200, type: { ar: "شقة", en: "Apartment" }, gender: "family", occupancy: null,
-            demoLocation: "newDemo", phase: "phase2", featured: true, images: ["https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
-            agent: { name: "Elite Homes", verified: true, rate: 5.0 }, features: { ar: ["واي فاي", "تكييف مركزي", "غسالة"], en: ["Wi-Fi", "Central AC", "Washing Machine"] },
-            trustBadges: { ar: ["صيانة مجانية", "سمارت هوم"], en: ["Free Maint.", "Smart Home"] },
-            pois: [{ icon: 'shopping-cart', ar: "مول تجاري (1.5 كم)", en: "Mall (1.5 km)", time: "4 min" }],
-            mapCoords: { top: '40%', left: '25%' }
-          },
-          {
-            id: 4, title: { ar: "فيلا مستقلة بحمام سباحة وحديقة خاصة", en: "Standalone Villa with Pool & Private Garden" },
-            location: { ar: "ديمو الجديدة، المرحلة الثالثة", en: "New Demo, Third Phase" }, price: "15,000,000", currency: { ar: "ج.م", en: "EGP" },
-            beds: 4, baths: 3, area: 450, type: { ar: "فيلا", en: "Villa" }, gender: "family", occupancy: null,
-            demoLocation: "newDemo", phase: "phase3", featured: true, images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
-            agent: { name: "Ajwar Real", verified: true, rate: 4.8 }, features: { ar: ["موقف سيارات", "حديقة خاصة", "أمن"], en: ["Parking", "Garden", "Security"] },
-            trustBadges: { ar: ["مطور معتمد", "تشطيب فاخر"], en: ["Certified Dev", "Luxury Finish"] },
-            pois: [{ icon: 'trees', ar: "حديقة عامة (200 م)", en: "Park (200 m)", time: "2 min walk" }],
-            mapCoords: { top: '70%', left: '50%' }
-          },
-          {
-            id: 5, title: { ar: "شقة ستوديو شبابي بموقع حيوي جداً", en: "Youth Studio Appt in Prime Location" },
-            location: { ar: "ديمو الجديدة، المرحلة الرابعة", en: "New Demo, Fourth Phase" }, price: "18,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" },
-            pricePerPerson: "4,500", beds: 1, baths: 1, area: 65, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 3, total: 4 },
-            demoLocation: "newDemo", phase: "phase4", featured: false, images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
-            agent: { name: "Future Homes", verified: true, rate: 4.6 }, features: { ar: ["واي فاي", "أمن 24/7", "غسالة"], en: ["Wi-Fi", "Security", "Washing"] },
-            trustBadges: { ar: ["بدون تأمين", "قريب من المواصلات"], en: ["No Deposit", "Near Transit"] },
-            pois: [{ icon: 'bus-front', ar: "مواصلات رئيسية (50 م)", en: "Main Transit (50 m)", time: "1 min walk" }],
-            mapCoords: { top: '20%', left: '60%' }
-          }
+            {
+                id: 1, 
+                title: { ar: "شقة مودرن فاخرة مفروشة بالكامل بإطلالة بانورامية", en: "Modern fully furnished apartment with panoramic view" },
+                location: { ar: "ديمو الجديدة، المرحلة الأولى", en: "New Demo, First Phase" }, 
+                price: "25,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" }, pricePerPerson: "6,250", 
+                beds: 2, baths: 1, area: 85, type: { ar: "شقة", en: "Apartment" }, 
+                gender: "male", occupancy: { current: 2, total: 4 }, demoLocation: "newDemo", phase: "phase1", featured: true, 
+                images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+                agent: { name: "Diamond Luxury", verified: true, rate: 4.9 }, 
+                features: { ar: ["واي فاي", "تكييف", "غسالة", "مطبخ", "جيم"], en: ["Wi-Fi", "AC", "Washing Machine", "Kitchen", "Gym"] },
+                trustBadges: { ar: ["شامل الفواتير", "بدون عمولة"], en: ["Bills Included", "No Commission"] },
+                pois: [{ icon: 'graduation-cap', ar: "الجامعة (2 كم)", en: "University (2 km)", time: "5 min" }],
+                mapCoords: { top: '35%', left: '45%' }
+            },
+            {
+                id: 2, 
+                title: { ar: "شقة 100 متر 2 غرف بتشطيبات الترا سوبر لوكس", en: "100 SQM 2-Bedroom Ultra Super Lux Appt" },
+                location: { ar: "ديمو القديمة، القاهرة", en: "Old Demo, Cairo" }, 
+                price: "47,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" }, pricePerPerson: "23,500", 
+                beds: 2, baths: 2, area: 100, type: { ar: "شقة", en: "Apartment" }, 
+                gender: "female", occupancy: { current: 1, total: 2 }, demoLocation: "oldDemo", phase: null, featured: false, 
+                images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+                agent: { name: "TruBroker™", verified: true, rate: 4.7 }, 
+                features: { ar: ["تكييف", "مطبخ", "حديقة", "أمن"], en: ["AC", "Kitchen", "Garden", "Security"] },
+                trustBadges: { ar: ["أمن 24 ساعة", "عقار موثق"], en: ["24/7 Security", "Verified"] },
+                pois: [{ icon: 'graduation-cap', ar: "الجامعة (5 كم)", en: "University (5 km)", time: "15 min" }],
+                mapCoords: { top: '55%', left: '70%' }
+            },
+            {
+                id: 3, 
+                title: { ar: "شقة (سمارت هوم) مفروشة بالكامل - الخيار الأمثل", en: "Smart Home Fully Furnished Appt - Perfect Choice" },
+                location: { ar: "ديمو الجديدة، المرحلة الثانية", en: "New Demo, Second Phase" }, 
+                price: "100,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" }, pricePerPerson: null, 
+                beds: 3, baths: 3, area: 200, type: { ar: "شقة", en: "Apartment" }, 
+                gender: "family", occupancy: null, demoLocation: "newDemo", phase: "phase2", featured: true, 
+                images: ["https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+                agent: { name: "Elite Homes", verified: true, rate: 5.0 }, 
+                features: { ar: ["واي فاي", "تكييف مركزي", "غسالة"], en: ["Wi-Fi", "Central AC", "Washing Machine"] },
+                trustBadges: { ar: ["صيانة مجانية", "سمارت هوم"], en: ["Free Maint.", "Smart Home"] },
+                pois: [{ icon: 'shopping-cart', ar: "مول تجاري (1.5 كم)", en: "Mall (1.5 km)", time: "4 min" }],
+                mapCoords: { top: '40%', left: '25%' }
+            },
+            {
+                id: 4, 
+                title: { ar: "فيلا مستقلة بحمام سباحة وحديقة خاصة", en: "Standalone Villa with Pool & Private Garden" },
+                location: { ar: "ديمو الجديدة، المرحلة الثالثة", en: "New Demo, Third Phase" }, 
+                price: "15,000,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: null, 
+                beds: 4, baths: 3, area: 450, type: { ar: "فيلا", en: "Villa" }, 
+                gender: "family", occupancy: null, demoLocation: "newDemo", phase: "phase3", featured: true, 
+                images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+                agent: { name: "Ajwar Real", verified: true, rate: 4.8 }, 
+                features: { ar: ["موقف سيارات", "حديقة خاصة", "أمن"], en: ["Parking", "Garden", "Security"] },
+                trustBadges: { ar: ["مطور معتمد", "تشطيب فاخر"], en: ["Certified Dev", "Luxury Finish"] },
+                pois: [{ icon: 'trees', ar: "حديقة عامة (200 م)", en: "Park (200 m)", time: "2 min walk" }],
+                mapCoords: { top: '70%', left: '50%' }
+            },
+            {
+                id: 5, 
+                title: { ar: "شقة ستوديو شبابي بموقع حيوي جداً", en: "Youth Studio Appt in Prime Location" },
+                location: { ar: "ديمو الجديدة، المرحلة الرابعة", en: "New Demo, Fourth Phase" }, 
+                price: "18,000", currency: { ar: "ج.م شهرياً", en: "EGP/Month" }, pricePerPerson: "4,500", 
+                beds: 1, baths: 1, area: 65, type: { ar: "شقة", en: "Apartment" }, 
+                gender: "male", occupancy: { current: 3, total: 4 }, demoLocation: "newDemo", phase: "phase4", featured: false, 
+                images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"],
+                agent: { name: "Future Homes", verified: true, rate: 4.6 }, 
+                features: { ar: ["واي فاي", "أمن 24/7", "غسالة"], en: ["Wi-Fi", "Security", "Washing"] },
+                trustBadges: { ar: ["بدون تأمين", "قريب من المواصلات"], en: ["No Deposit", "Near Transit"] },
+                pois: [{ icon: 'bus-front', ar: "مواصلات رئيسية (50 م)", en: "Main Transit (50 m)", time: "1 min walk" }],
+                mapCoords: { top: '20%', left: '60%' }
+            }
         ];
 
-        // --- 2. Global State ---
+        // --- 3. Global State ---
         let state = {
             isDark: false, 
             lang: 'ar',
@@ -168,8 +201,6 @@
             showCompareModal: false,
             selectedPropertyId: null,
             activePinId: null,
-            isMenuOpen: false,
-            isFilterOpen: false,
             isChatOpen: false,
             chatMessages: [],
             chatInput: '',
@@ -192,19 +223,6 @@
                 renderApp();
             }
         });
-
-        const navigateToProperty = (id) => {
-            window.history.pushState({ page: 'property' }, 'Property Details');
-            state.selectedPropertyId = id;
-            state.imageIndex = 0;
-            window.scrollTo(0,0);
-            renderApp();
-        };
-
-        const navigateHome = () => {
-            if(window.history.state !== null) window.history.back();
-            else { state.selectedPropertyId = null; window.scrollTo(0,0); renderApp(); }
-        };
 
         // --- Helper Functions ---
         const t = (key) => translations[state.lang][key] || key;
@@ -238,30 +256,48 @@
             toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-[${C.bgDark}]/90 glass-heavy border border-[${C.primary}]/50 text-white px-6 py-3.5 rounded-2xl font-bold shadow-[0_10px_40px_rgba(99,142,203,0.3)] animate-in slide-in-from-top-10 fade-in duration-300 flex items-center gap-2 whitespace-nowrap`;
             toast.innerHTML = msg;
             document.body.appendChild(toast);
-            setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+            
+            setTimeout(() => { 
+                toast.classList.add('fade-out'); 
+                setTimeout(() => toast.remove(), 300); 
+            }, 3000);
         };
 
-        // --- Format Chat Message ---
         const formatMessage = (text) => {
-            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/\n/g, '<br/>');
-            return formatted;
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
         };
 
-        // --- State Mutations ---
+        // --- Actions & Mutations ---
         window.toggleTheme = () => { state.isDark = !state.isDark; renderApp(); };
         window.toggleLang = () => { state.lang = state.lang === 'ar' ? 'en' : 'ar'; document.dir = state.lang === 'ar' ? 'rtl' : 'ltr'; renderApp(); };
-        window.toggleFilter = () => { state.isFilterOpen = !state.isFilterOpen; renderApp(); };
         window.setLocation = (loc) => { state.activeLocation = loc; if(loc !== 'newDemo') state.activePhase = 'all'; renderApp(); };
         window.setPhase = (phase) => { state.activePhase = phase; renderApp(); };
         window.setViewMode = (mode) => { state.viewMode = mode; renderApp(); };
         window.toggleShowFavs = () => { state.showFavorites = !state.showFavorites; renderApp(); };
         window.dismissPwa = () => { state.showPwaPrompt = false; renderApp(); };
         
+        window.navigateToProperty = (id) => {
+            window.history.pushState({ page: 'property' }, 'Property Details');
+            state.selectedPropertyId = id;
+            state.imageIndex = 0;
+            window.scrollTo(0,0);
+            renderApp();
+        };
+
+        window.navigateHome = () => {
+            if(window.history.state !== null) window.history.back();
+            else { state.selectedPropertyId = null; window.scrollTo(0,0); renderApp(); }
+        };
+
         window.toggleFav = (id, e) => {
             if(e) e.stopPropagation();
-            if(state.favorites.includes(id)) { state.favorites = state.favorites.filter(f => f !== id); showToast(t('toastFavRemove')); } 
-            else { state.favorites.push(id); showToast(t('toastFavAdd')); }
+            if(state.favorites.includes(id)) { 
+                state.favorites = state.favorites.filter(f => f !== id); 
+                showToast(t('toastFavRemove')); 
+            } else { 
+                state.favorites.push(id); 
+                showToast(t('toastFavAdd')); 
+            }
             renderApp();
         };
 
@@ -270,9 +306,14 @@
             if(state.compareList.includes(id)) {
                 state.compareList = state.compareList.filter(c => c !== id);
             } else {
-                if(state.compareList.length >= 2) { showToast("يمكنك مقارنة عقارين فقط في نفس الوقت ⚖️"); return; }
+                if(state.compareList.length >= 2) { 
+                    showToast(state.lang === 'ar' ? "يمكنك مقارنة عقارين فقط ⚖️" : "You can compare only 2 properties ⚖️"); 
+                    return; 
+                }
                 state.compareList.push(id);
-                if(state.compareList.length === 2) showToast("تم تحديد عقارين. اضغط 'قارن الآن' ⚖️");
+                if(state.compareList.length === 2) {
+                    showToast(state.lang === 'ar' ? "تم تحديد عقارين. اضغط 'قارن الآن' ⚖️" : "2 properties selected. Compare now ⚖️");
+                }
             }
             renderApp();
         };
@@ -291,7 +332,10 @@
             if(state.isChatOpen) {
                 window.history.pushState({ page: 'chat' }, 'Chat');
                 if(state.chatMessages.length === 0) {
-                    state.chatMessages = [{ sender: 'ai', text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 أنا المساعد الذكي، كيف يمكنني مساعدتك؟' : 'Welcome! 🤖 I am your AI assistant.' }];
+                    state.chatMessages = [{ 
+                        sender: 'ai', 
+                        text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 أنا المساعد الذكي، كيف يمكنني مساعدتك؟' : 'Welcome to Saknk! 🤖 I am your AI assistant.' 
+                    }];
                 }
             } else {
                 if(window.history.state !== null) window.history.back();
@@ -312,6 +356,7 @@
             state.chatInput = '';
             state.isBotTyping = true;
             renderApp();
+            
             setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
             
             setTimeout(() => {
@@ -328,7 +373,7 @@
             }, 1000);
         };
 
-        // --- Render Functions ---
+        // --- UI Rendering ---
         const renderAmbientGlow = () => `
             <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none" style="will-change: transform; transform: translateZ(0);">
                 <div class="absolute top-[-10%] ${state.lang === 'ar' ? 'right-[-10%]' : 'left-[-10%]'} w-[60vw] h-[60vw] rounded-full blur-[140px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.primary}]/15` : `bg-[${C.midBlue}]/25`}" style="animation: float 15s ease-in-out infinite"></div>
@@ -336,7 +381,6 @@
             </div>
         `;
 
-        // PWA Banner - Slim and Compact version
         const renderPwaPrompt = (theme) => {
             if (!state.showPwaPrompt) return '';
             return `
@@ -357,7 +401,7 @@
         const renderHeader = (theme) => `
             <div class="fixed top-4 left-4 right-4 z-40 max-w-7xl mx-auto">
                 <div class="${theme.islandBg} rounded-[1.5rem] px-5 py-3 flex justify-between items-center transition-all duration-300 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
-                    <div class="flex items-center gap-3 cursor-pointer" onclick="window.clearSelection()">
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="window.navigateHome()">
                         <img src="${mainLogoUrl}" alt="Logo" class="h-10 w-auto" style="object-fit: contain;">
                     </div>
                     <div class="flex items-center gap-2">
@@ -389,6 +433,20 @@
             const p1 = properties.find(p => p.id === state.compareList[0]);
             const p2 = properties.find(p => p.id === state.compareList[1]);
             
+            const createCompareCard = (prop) => `
+                <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
+                    <img src="${prop.images[0]}" class="w-full h-40 object-cover rounded-xl">
+                    <h3 class="font-bold text-lg ${theme.textMain}">${prop.price} <span class="text-sm font-normal">${prop.currency[state.lang]}</span></h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('location')}</span> <span class="font-bold ${theme.textMain}">${prop.location[state.lang]}</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('beds')}</span> <span class="font-bold ${theme.textMain}">${prop.beds}</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${prop.baths}</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${prop.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
+                    </div>
+                    <button onclick="window.navigateToProperty(${prop.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">${state.lang === 'ar' ? 'التفاصيل' : 'Details'}</button>
+                </div>
+            `;
+
             return `
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.closeCompareModal()"></div>
@@ -397,30 +455,9 @@
                         <h2 class="text-2xl font-bold ${theme.textMain}">${t('propertyCompare')} ⚖️</h2>
                         <button onclick="window.closeCompareModal()" class="p-2 bg-white/10 rounded-full hover:bg-red-500/20 hover:text-red-500 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
-                            <img src="${p1.images[0]}" class="w-full h-40 object-cover rounded-xl">
-                            <h3 class="font-bold text-lg ${theme.textMain}">${p1.price} <span class="text-sm font-normal">${p1.currency[state.lang]}</span></h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('location')}</span> <span class="font-bold ${theme.textMain}">${p1.location[state.lang]}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('beds')}</span> <span class="font-bold ${theme.textMain}">${p1.beds}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${p1.baths}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${p1.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
-                            </div>
-                            <button onclick="window.navigateToProperty(${p1.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
-                        </div>
-                        <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
-                            <img src="${p2.images[0]}" class="w-full h-40 object-cover rounded-xl">
-                            <h3 class="font-bold text-lg ${theme.textMain}">${p2.price} <span class="text-sm font-normal">${p2.currency[state.lang]}</span></h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('location')}</span> <span class="font-bold ${theme.textMain}">${p2.location[state.lang]}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('beds')}</span> <span class="font-bold ${theme.textMain}">${p2.beds}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${p2.baths}</span></div>
-                                <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${p2.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
-                            </div>
-                            <button onclick="window.navigateToProperty(${p2.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
-                        </div>
+                        ${createCompareCard(p1)}
+                        ${createCompareCard(p2)}
                     </div>
                 </div>
             </div>
@@ -561,7 +598,7 @@
                                 <img src="${p.images[0]}" class="w-full h-20 object-cover rounded-lg mb-2">
                                 <p class="text-[10px] font-bold truncate ${theme.textMain} mb-1">${p.title[state.lang]}</p>
                                 <p class="text-sm font-black text-[${C.primary}]">${p.price} <span class="text-[10px] font-normal">${p.currency[state.lang]}</span></p>
-                                <button onclick="window.navigateToProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">التفاصيل</button>
+                                <button onclick="window.navigateToProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">${state.lang === 'ar' ? 'التفاصيل' : 'Details'}</button>
                             </div>
                         </div>
                     `).join('')}
@@ -573,7 +610,7 @@
                     <div class="w-32 h-32 bg-gradient-to-br from-[${C.primary}]/20 to-transparent rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(99,142,203,0.1)]">
                         <i data-lucide="heart" class="w-16 h-16 text-[${C.primary}] opacity-80"></i>
                     </div>
-                    <h3 class="text-2xl font-black mb-2 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] bg-clip-text text-transparent">${state.showFavorites ? t('noFavoritesTitle') : "لا توجد عقارات مطابقة"}</h3>
+                    <h3 class="text-2xl font-black mb-2 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] bg-clip-text text-transparent">${state.showFavorites ? t('noFavoritesTitle') : (state.lang === 'ar' ? 'لا توجد عقارات مطابقة' : 'No properties found')}</h3>
                 </div>
             ` : displayedProperties.map((p, i) => `
                 <div class="animate-fade-up group relative ${theme.cardBg} rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 cursor-pointer self-start" style="animation-delay: ${i*0.1}s" onclick="window.navigateToProperty(${p.id})">
@@ -655,7 +692,6 @@
                 </div>
             ` : '';
 
-            // تم الاعتماد على gap-6 الموحد بدون أي مسافات عشوائية (Margin top/bottom)
             return `
                 <main class="flex-1 px-4 pt-[104px] pb-12 flex flex-col gap-6 relative z-10 max-w-7xl mx-auto w-full">
                     ${pwaHTML}
@@ -741,7 +777,6 @@
                 </div>
             </div>
 
-            <!-- تم تطبيق flex gap موحد -->
             <main class="px-4 sm:px-6 -mt-16 relative z-20 flex-1 flex flex-col gap-6 max-w-4xl mx-auto w-full pb-12">
                 <div class="${theme.islandBg} rounded-[2rem] p-6 shadow-md animate-in slide-in-from-bottom-8 duration-700 w-full">
                     <div class="flex justify-between items-start mb-4">
@@ -859,7 +894,6 @@
                 </div>
 
                 ${recommendedHTML}
-
             </main>
             `;
         };
@@ -880,6 +914,7 @@
             
             lucide.createIcons();
 
+            // Scroll behaviour for Dock (WhatsApp / Call CTA)
             const target = document.getElementById('dock-target');
             const content = document.getElementById('dock-content');
             if(target && content) {
@@ -899,3 +934,6 @@
     </script>
 </body>
 </html>
+
+
+
