@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>سكنك | Saknk Real Estate</title>
     
     <!-- Tailwind CSS -->
@@ -15,46 +15,67 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; overflow-x: hidden; }
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased;
+        }
         
-        /* Scrollbar Hiding */
+        /* إخفاء شريط التمرير */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Animations */
+        /* التأثير الزجاجي الفائق (Ultra Glass) - تصميم Apple
+           تم فصله تماماً عن Tailwind لضمان عدم التداخل ولإعطاء شفافية ولمعان مثالي
+        */
+        .apple-glass-light {
+            background-color: rgba(255, 255, 255, 0.35) !important;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            box-shadow: 0 10px 40px -10px rgba(99, 142, 203, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+            transform: translateZ(0); /* تسريع الأداء عبر كارت الشاشة */
+        }
+
+        .apple-glass-dark {
+            background-color: rgba(21, 32, 51, 0.45) !important;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+            transform: translateZ(0);
+        }
+        
+        /* أنيميشن الظهور السريع (بدون لاج) */
         @keyframes float {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-20px) scale(1.05); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(0, -20px, 0) scale(1.05); }
         }
         
         @keyframes fadeUpStagger {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translate3d(0, 20px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
         }
         
         .animate-fade-up {
-          animation: fadeUpStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: fadeUpStagger 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           opacity: 0;
+          will-change: transform, opacity;
         }
         
         @keyframes pinBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, -10px, 0); }
         }
-        .pin-bounce { animation: pinBounce 2s infinite; }
-        
-        /* UI Effects */
-        .glass-heavy {
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-        }
+        .pin-bounce { animation: pinBounce 2s infinite; will-change: transform; }
         
         .fade-out {
             opacity: 0;
-            transition: opacity 0.3s ease-out;
+            transform: translate3d(-50%, -20px, 0) !important;
+            transition: all 0.3s ease-out;
         }
         
-        /* Prose styling for chatbot */
+        /* تنسيقات الشات */
         .prose strong { color: #638ECB; font-weight: 800; }
         .prose ul { list-style-type: disc; margin-right: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
         .prose li { margin-bottom: 0.25rem; }
@@ -203,7 +224,6 @@
             activePinId: null,
             isChatOpen: false,
             chatMessages: [],
-            chatInput: '',
             isBotTyping: false,
             contactType: 'tenant',
             imageIndex: 0,
@@ -232,7 +252,10 @@
             textMain: state.isDark ? `text-[${C.bgLight}]` : `text-[${C.bgDark}]`,
             textMuted: state.isDark ? `text-[${C.softBlue}]` : `text-[${C.darkBlue}]/70`,
             cardBg: state.isDark ? `bg-[${C.cardDark}]/80 backdrop-blur-xl border border-[${C.darkBlue}]/30 shadow-2xl` : `bg-white/90 backdrop-blur-xl border border-[${C.borderLight}] shadow-xl`,
-            islandBg: state.isDark ? `bg-[${C.bgDark}]/40 glass-heavy border border-[${C.darkBlue}]/40 shadow-[0_8px_30px_rgba(0,0,0,0.5)]` : `bg-white/50 glass-heavy border border-[${C.borderLight}]/80 shadow-[0_8px_30px_rgba(99,142,203,0.15)]`,
+            
+            // استخدام صنف الـ CSS النقي للتأثير الزجاجي بدلاً من Tailwind للبانرات والهيدر
+            islandBg: state.isDark ? `apple-glass-dark` : `apple-glass-light`,
+            
             btnBg: state.isDark ? `bg-[${C.darkBlue}]/30 hover:bg-[${C.darkBlue}]/50 border border-transparent` : `bg-[${C.borderLight}]/50 hover:bg-[${C.softBlue}]/50 border border-[${C.borderLight}]/50`,
             inputBg: state.isDark ? `bg-[${C.bgDark}]/50 border-[${C.darkBlue}]/50 text-white focus:border-[${C.primary}]` : `bg-white border-[${C.borderLight}] text-[${C.bgDark}] focus:border-[${C.primary}]`,
             inputWrapperBg: state.isDark ? `bg-[${C.bgDark}]/50 border-[${C.darkBlue}]/50 text-white focus-within:border-[${C.primary}]` : `bg-white border-[${C.borderLight}] text-[${C.bgDark}] focus-within:border-[${C.primary}]`
@@ -253,7 +276,8 @@
 
         const showToast = (msg) => {
             const toast = document.createElement('div');
-            toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-[${C.bgDark}]/90 glass-heavy border border-[${C.primary}]/50 text-white px-6 py-3.5 rounded-2xl font-bold shadow-[0_10px_40px_rgba(99,142,203,0.3)] animate-in slide-in-from-top-10 fade-in duration-300 flex items-center gap-2 whitespace-nowrap`;
+            // تم استخدام الزجاج هنا أيضاً للإشعار
+            toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[200] ${state.isDark ? 'apple-glass-dark text-white' : 'apple-glass-light text-black'} px-6 py-3.5 rounded-2xl font-bold shadow-2xl animate-in slide-in-from-top-10 fade-in duration-300 flex items-center gap-2 whitespace-nowrap`;
             toast.innerHTML = msg;
             document.body.appendChild(toast);
             
@@ -326,7 +350,7 @@
         window.prevImage = (e, len) => { e.stopPropagation(); state.imageIndex = state.imageIndex === 0 ? len - 1 : state.imageIndex - 1; renderApp(); };
         window.setActivePin = (id) => { state.activePinId = state.activePinId === id ? null : id; renderApp(); };
 
-        // --- Chatbot Logic ---
+        // --- Chatbot Logic (تم حل اللاج عند الكتابة) ---
         window.toggleChat = () => { 
             state.isChatOpen = !state.isChatOpen; 
             if(state.isChatOpen) {
@@ -345,15 +369,15 @@
         };
         
         window.closeChat = () => { if(window.history.state !== null) window.history.back(); else { state.isChatOpen = false; renderApp(); } };
-        window.updateChatInput = (val) => { state.chatInput = val; renderApp(); };
         
         window.sendChatMessage = (e, textOverride) => {
             if(e) e.preventDefault();
-            const text = textOverride || state.chatInput;
+            // أخذ القيمة مباشرة عند الإرسال لمنع الريندر مع كل حرف وتجنب اللاج تماماً
+            const inputEl = document.getElementById('chatInputObj');
+            const text = textOverride || (inputEl ? inputEl.value : '');
             if(!text.trim() || state.isBotTyping) return;
             
             state.chatMessages.push({ sender: 'user', text });
-            state.chatInput = '';
             state.isBotTyping = true;
             renderApp();
             
@@ -376,15 +400,16 @@
         // --- UI Rendering ---
         const renderAmbientGlow = () => `
             <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none" style="will-change: transform; transform: translateZ(0);">
-                <div class="absolute top-[-10%] ${state.lang === 'ar' ? 'right-[-10%]' : 'left-[-10%]'} w-[60vw] h-[60vw] rounded-full blur-[140px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.primary}]/15` : `bg-[${C.midBlue}]/25`}" style="animation: float 15s ease-in-out infinite"></div>
-                <div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.darkBlue}]/20` : `bg-[${C.primary}]/15`}" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div>
+                <!-- زيادة حجم وشفافية الألوان الخلفية قليلاً ليظهر الزجاج بشكل واضح وجميل -->
+                <div class="absolute top-[-5%] ${state.lang === 'ar' ? 'right-[-5%]' : 'left-[-5%]'} w-[70vw] h-[70vw] rounded-full blur-[120px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.primary}]/25` : `bg-[${C.midBlue}]/35`}" style="animation: float 15s ease-in-out infinite"></div>
+                <div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.darkBlue}]/20` : `bg-[${C.primary}]/20`}" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div>
             </div>
         `;
 
         const renderPwaPrompt = (theme) => {
             if (!state.showPwaPrompt) return '';
             return `
-            <div class="w-full ${theme.islandBg} px-4 py-2.5 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} shadow-sm">
+            <div class="w-full ${theme.islandBg} px-4 py-2.5 rounded-2xl flex items-center gap-3 animate-fade-up shadow-sm">
                 <div class="bg-white rounded-lg p-1.5 shadow-sm border border-gray-100 flex-shrink-0">
                     <img src="${mainLogoUrl}" class="w-7 h-7 object-contain">
                 </div>
@@ -399,8 +424,9 @@
         };
 
         const renderHeader = (theme) => `
-            <div class="fixed top-4 left-4 right-4 z-40 max-w-7xl mx-auto">
-                <div class="${theme.islandBg} rounded-[1.5rem] px-5 py-3 flex justify-between items-center transition-all duration-300 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+            <div class="fixed top-4 left-4 right-4 z-40 max-w-7xl mx-auto animate-fade-up">
+                <!-- تم استخدام كلاس islandBg هنا للبانر الرئيسي -->
+                <div class="${theme.islandBg} rounded-[1.5rem] px-5 py-3 flex justify-between items-center transition-all duration-300">
                     <div class="flex items-center gap-3 cursor-pointer" onclick="window.navigateHome()">
                         <img src="${mainLogoUrl}" alt="Logo" class="h-10 w-auto" style="object-fit: contain;">
                     </div>
@@ -435,7 +461,7 @@
             
             const createCompareCard = (prop) => `
                 <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
-                    <img src="${prop.images[0]}" class="w-full h-40 object-cover rounded-xl">
+                    <img src="${prop.images[0]}" class="w-full h-40 object-cover rounded-xl" loading="lazy">
                     <h3 class="font-bold text-lg ${theme.textMain}">${prop.price} <span class="text-sm font-normal">${prop.currency[state.lang]}</span></h3>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('location')}</span> <span class="font-bold ${theme.textMain}">${prop.location[state.lang]}</span></div>
@@ -450,10 +476,10 @@
             return `
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
                 <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.closeCompareModal()"></div>
-                <div class="relative w-full max-w-4xl ${theme.islandBg} rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95 duration-300 overflow-y-auto max-h-[90vh] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                <div class="relative w-full max-w-4xl ${theme.islandBg} rounded-[2rem] p-6 shadow-2xl animate-fade-up overflow-y-auto max-h-[90vh]">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold ${theme.textMain}">${t('propertyCompare')} ⚖️</h2>
-                        <button onclick="window.closeCompareModal()" class="p-2 bg-white/10 rounded-full hover:bg-red-500/20 hover:text-red-500 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+                        <button onclick="window.closeCompareModal()" class="p-2 bg-black/10 dark:bg-white/10 rounded-full hover:bg-red-500/20 hover:text-red-500 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         ${createCompareCard(p1)}
@@ -467,7 +493,7 @@
         const renderChatbot = () => {
             if(!state.isChatOpen) {
                 return `
-                <div class="fixed bottom-6 right-6 z-[150] animate-in fade-in zoom-in duration-300">
+                <div class="fixed bottom-6 right-6 z-[150] animate-fade-up">
                     <button onclick="window.toggleChat()" class="w-14 h-14 rounded-full bg-[${C.darkBlue}] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(57,88,134,0.4)] hover:scale-110 active:scale-95 transition-all">
                         <i data-lucide="bot" class="w-7 h-7"></i>
                         <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-[${C.primary}] border-2 border-[${C.bgDark}] rounded-full animate-ping"></span>
@@ -476,7 +502,7 @@
             }
 
             const msgsHTML = state.chatMessages.map(msg => `
-                <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2">
+                <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-up">
                     <div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed prose ${msg.sender === 'user' ? `bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white rounded-tr-sm font-medium shadow-md` : `bg-[${C.cardDark}] text-white border border-white/10 rounded-tl-sm shadow-sm`}">
                         ${formatMessage(msg.text)}
                     </div>
@@ -496,8 +522,8 @@
 
             return `
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" dir="${state.lang === 'ar' ? 'rtl' : 'ltr'}">
-                <div class="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 cursor-pointer" onclick="window.closeChat()"></div>
-                <div class="relative w-full max-w-[360px] h-[680px] max-h-[85vh] bg-[${C.bgDark}] rounded-[3rem] border-[6px] border-[${C.primary}] shadow-[0_0_60px_rgba(99,142,203,0.3)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-md animate-fade-up cursor-pointer" onclick="window.closeChat()"></div>
+                <div class="relative w-full max-w-[360px] h-[680px] max-h-[85vh] bg-[${C.bgDark}] rounded-[3rem] border-[6px] border-[${C.primary}] shadow-[0_0_60px_rgba(99,142,203,0.3)] flex flex-col overflow-hidden animate-fade-up">
                     <div class="absolute top-0 inset-x-0 h-7 flex justify-center z-50 pointer-events-none">
                         <div class="w-32 h-full bg-[${C.primary}] rounded-b-[1.2rem] px-[2px] pb-[2px] pt-0">
                             <div class="w-full h-full bg-black rounded-b-[1rem] flex items-center justify-center gap-2">
@@ -523,7 +549,7 @@
                         ${msgsHTML}
                         ${quickReplies}
                         ${state.isBotTyping ? `
-                            <div class="flex justify-start animate-in fade-in slide-in-from-bottom-2">
+                            <div class="flex justify-start animate-fade-up">
                                 <div class="bg-[${C.cardDark}] text-gray-300 text-sm p-3.5 rounded-2xl rounded-tl-sm border border-white/10 shadow-sm flex items-center gap-2">
                                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[${C.primary}]"></i>
                                     <span>${state.lang === 'ar' ? 'يفكر...' : 'Thinking...'}</span>
@@ -533,8 +559,8 @@
                     </div>
                     <div class="p-4 bg-[${C.cardDark}] border-t border-white/10 relative z-40">
                         <form onsubmit="window.sendChatMessage(event)" class="flex gap-2 relative">
-                            <input type="text" oninput="window.updateChatInput(this.value)" value="${state.chatInput}" placeholder="${state.lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message...'}" class="flex-1 bg-black/50 text-white text-sm px-4 py-3.5 rounded-full border border-white/10 outline-none focus:border-[${C.primary}] transition-colors" ${state.isBotTyping ? 'disabled' : ''} />
-                            <button type="submit" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${state.isBotTyping || !state.chatInput.trim() ? 'bg-gray-600 cursor-not-allowed text-gray-400' : `bg-[${C.primary}] hover:scale-105 active:scale-95 shadow-lg shadow-[${C.primary}]/20 text-white`}">
+                            <input type="text" id="chatInputObj" placeholder="${state.lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message...'}" class="flex-1 bg-black/50 text-white text-sm px-4 py-3.5 rounded-full border border-white/10 outline-none focus:border-[${C.primary}] transition-colors" ${state.isBotTyping ? 'disabled' : ''} />
+                            <button type="submit" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${state.isBotTyping ? 'bg-gray-600 cursor-not-allowed text-gray-400' : `bg-[${C.primary}] hover:scale-105 active:scale-95 shadow-lg shadow-[${C.primary}]/20 text-white`}">
                                 <i data-lucide="send" class="w-4 h-4 ${state.lang === 'ar' ? 'rotate-180 -ml-1' : 'ml-1'}"></i>
                             </button>
                         </form>
@@ -555,21 +581,21 @@
             });
 
             const tabsHTML = !state.showFavorites ? `
-                <div class="transition-all duration-500 w-full">
-                    <div class="${theme.islandBg} rounded-[1.5rem] p-1.5 flex items-center justify-between border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                <div class="transition-all duration-300 w-full animate-fade-up">
+                    <div class="${theme.islandBg} rounded-[1.5rem] p-1.5 flex items-center justify-between">
                         <div class="flex w-full relative">
                             <div class="absolute inset-y-0 w-1/2 bg-[${C.primary}] rounded-xl transition-all duration-300 ease-out shadow-md ${state.activeLocation === 'newDemo' ? (state.lang === 'ar' ? 'right-0' : 'left-0') : (state.lang === 'ar' ? 'right-1/2' : 'left-1/2')}"></div>
                             <button onclick="window.setLocation('newDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'newDemo' ? 'text-white' : `${theme.textMuted} hover:${theme.textMain}`}">${t('newDemo')}</button>
                             <button onclick="window.setLocation('oldDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'oldDemo' ? 'text-white' : `${theme.textMuted} hover:${theme.textMain}`}">${t('oldDemo')}</button>
                         </div>
-                        <div class="w-[1px] h-6 mx-2 ${state.isDark ? 'bg-white/10' : `bg-[${C.borderLight}]`}"></div>
+                        <div class="w-[1px] h-6 mx-2 ${state.isDark ? 'bg-white/10' : `bg-black/10`}"></div>
                         <div class="flex bg-[${state.isDark ? 'black' : 'white'}]/20 p-1 rounded-xl ml-1 border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
                             <button onclick="window.setViewMode('grid')" class="p-1.5 rounded-lg transition-colors ${state.viewMode==='grid' ? `bg-[${C.primary}] text-white shadow-md` : theme.textMuted}"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
                             <button onclick="window.setViewMode('map')" class="p-1.5 rounded-lg transition-colors ${state.viewMode==='map' ? `bg-[${C.primary}] text-white shadow-md` : theme.textMuted}"><i data-lucide="map" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                     ${state.activeLocation === 'newDemo' ? `
-                    <div class="mt-4 ${theme.islandBg} rounded-[1.2rem] p-1.5 flex items-center gap-1 overflow-x-auto hide-scrollbar snap-x border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
+                    <div class="mt-4 ${theme.islandBg} rounded-[1.2rem] p-1.5 flex items-center gap-1 overflow-x-auto hide-scrollbar snap-x">
                         <span class="text-xs font-bold whitespace-nowrap px-3 ${theme.textMuted}">${t('choosePhase')}:</span>
                         <div class="flex gap-1">
                             ${[{id:'all',l:t('all')}, {id:'phase1',l:t('phase1')}, {id:'phase2',l:t('phase2')}, {id:'phase3',l:t('phase3')}, {id:'phase4',l:t('phase4')}].map(ph => `
@@ -581,8 +607,8 @@
             ` : '';
 
             const mapHTML = `
-                <div class="w-full h-[65vh] rounded-[2rem] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-                    <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover ${state.isDark ? 'opacity-40 grayscale' : 'opacity-70'} mix-blend-overlay">
+                <div class="w-full h-[65vh] rounded-[2rem] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative overflow-hidden shadow-2xl animate-fade-up">
+                    <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" loading="lazy" class="w-full h-full object-cover ${state.isDark ? 'opacity-40 grayscale' : 'opacity-70'} mix-blend-overlay">
                     <div class="absolute inset-0 bg-gradient-to-t ${state.isDark ? `from-[${C.bgDark}]/80` : `from-[${C.bgLight}]/50`} via-transparent"></div>
                     
                     ${displayedProperties.map(p => `
@@ -594,8 +620,8 @@
                                 <div class="absolute w-full h-full bg-[${C.primary}] rounded-full animate-ping opacity-50"></div>
                             </div>
                             
-                            <div class="absolute top-12 left-1/2 -translate-x-1/2 w-48 ${theme.islandBg} rounded-xl p-2 shadow-2xl transition-all duration-300 origin-top pointer-events-none border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} ${state.activePinId === p.id ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">
-                                <img src="${p.images[0]}" class="w-full h-20 object-cover rounded-lg mb-2">
+                            <div class="absolute top-12 left-1/2 -translate-x-1/2 w-48 ${theme.islandBg} rounded-xl p-2 shadow-2xl transition-all duration-300 origin-top pointer-events-none ${state.activePinId === p.id ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">
+                                <img src="${p.images[0]}" loading="lazy" class="w-full h-20 object-cover rounded-lg mb-2">
                                 <p class="text-[10px] font-bold truncate ${theme.textMain} mb-1">${p.title[state.lang]}</p>
                                 <p class="text-sm font-black text-[${C.primary}]">${p.price} <span class="text-[10px] font-normal">${p.currency[state.lang]}</span></p>
                                 <button onclick="window.navigateToProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">${state.lang === 'ar' ? 'التفاصيل' : 'Details'}</button>
@@ -606,17 +632,17 @@
             `;
 
             const cardsHTML = displayedProperties.length === 0 ? `
-                <div class="col-span-full py-20 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4">
+                <div class="col-span-full py-20 flex flex-col items-center justify-center text-center animate-fade-up">
                     <div class="w-32 h-32 bg-gradient-to-br from-[${C.primary}]/20 to-transparent rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(99,142,203,0.1)]">
                         <i data-lucide="heart" class="w-16 h-16 text-[${C.primary}] opacity-80"></i>
                     </div>
                     <h3 class="text-2xl font-black mb-2 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] bg-clip-text text-transparent">${state.showFavorites ? t('noFavoritesTitle') : (state.lang === 'ar' ? 'لا توجد عقارات مطابقة' : 'No properties found')}</h3>
                 </div>
             ` : displayedProperties.map((p, i) => `
-                <div class="animate-fade-up group relative ${theme.cardBg} rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 cursor-pointer self-start" style="animation-delay: ${i*0.1}s" onclick="window.navigateToProperty(${p.id})">
+                <div class="animate-fade-up group relative ${theme.cardBg} rounded-[2rem] overflow-hidden transition-all duration-300 hover:-translate-y-2 cursor-pointer self-start" onclick="window.navigateToProperty(${p.id})">
                     <div class="absolute -inset-1 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] rounded-[2.5rem] opacity-0 group-hover:opacity-20 blur-xl transition duration-700 pointer-events-none"></div>
                     <div class="relative h-60 overflow-hidden m-2 rounded-t-[1.5rem] rounded-b-xl z-10">
-                        <img src="${p.images[0]}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                        <img src="${p.images[0]}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90"></div>
                         <div class="absolute top-4 ${state.lang === 'ar' ? 'right-4' : 'left-4'} flex flex-col gap-2">
                             ${p.featured ? `<span class="bg-[${C.primary}] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg backdrop-blur-md w-fit">${t('featured')}</span>` : ''}
@@ -658,7 +684,7 @@
             `).join('');
 
             const formHTML = !state.showFavorites ? `
-                <div class="${theme.cardBg} rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500 w-full">
+                <div class="${theme.cardBg} rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-fade-up w-full">
                     <div class="absolute top-0 ${state.lang === 'ar' ? 'right-0' : 'left-0'} w-40 h-40 bg-[${C.primary}]/10 rounded-full blur-[60px]"></div>
                     <h3 class="text-2xl font-black mb-2 relative z-10 ${theme.textMain}">${t('contactUs')}</h3>
                     <p class="text-sm mb-6 relative z-10 ${theme.textMuted}">${t('contactDesc')}</p>
@@ -720,13 +746,13 @@
             
             const suggestedProps = properties.filter(sp => sp.id !== state.selectedPropertyId && sp.featured).slice(0, 3);
             const recommendedHTML = suggestedProps.length > 0 ? `
-                <div class="border-t pt-8 border-[${C.borderLight}]/50 animate-in slide-in-from-bottom-8 duration-700 w-full">
+                <div class="border-t pt-8 border-[${C.borderLight}]/50 animate-fade-up w-full">
                     <h3 class="text-2xl font-bold mb-6 ${theme.textMain}">${t('recommended')}</h3>
                     <div class="flex overflow-x-auto gap-4 pb-6 snap-x hide-scrollbar">
                         ${suggestedProps.map(sProp => `
                             <div onclick="window.navigateToProperty(${sProp.id})" class="min-w-[280px] w-[280px] snap-center rounded-[2rem] overflow-hidden border ${theme.cardBg} hover:-translate-y-2 transition-transform cursor-pointer">
                                 <div class="h-40 relative">
-                                    <img src="${sProp.images[0]}" class="w-full h-full object-cover" />
+                                    <img src="${sProp.images[0]}" loading="lazy" class="w-full h-full object-cover" />
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                     <div class="absolute top-3 right-3">
                                         <span class="bg-[${C.primary}] text-white text-[10px] font-bold px-2 py-1 rounded-lg">${t('featured')}</span>
@@ -750,8 +776,8 @@
             ` : '';
 
             return `
-            <div class="relative h-[65vh] w-full rounded-b-[3rem] overflow-hidden shadow-2xl shrink-0 z-10 group mt-0">
-                <img src="${p.images[state.imageIndex]}" class="w-full h-full object-cover animate-in fade-in duration-500" />
+            <div class="relative h-[65vh] w-full rounded-b-[3rem] overflow-hidden shadow-2xl shrink-0 z-10 group mt-0 animate-fade-up">
+                <img src="${p.images[state.imageIndex]}" class="w-full h-full object-cover" />
                 <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent ${state.isDark ? `to-[${C.bgDark}]` : `to-[${C.bgLight}]`}"></div>
                 
                 ${p.images.length > 1 ? `
@@ -778,7 +804,7 @@
             </div>
 
             <main class="px-4 sm:px-6 -mt-16 relative z-20 flex-1 flex flex-col gap-6 max-w-4xl mx-auto w-full pb-12">
-                <div class="${theme.islandBg} rounded-[2rem] p-6 shadow-md animate-in slide-in-from-bottom-8 duration-700 w-full">
+                <div class="${theme.islandBg} rounded-[2rem] p-6 shadow-md animate-fade-up w-full">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <span class="inline-block bg-[${C.primary}] text-white text-xs font-bold px-4 py-1.5 rounded-xl mb-3 shadow-[0_4px_15px_rgba(99,142,203,0.3)]">${p.type[state.lang]} • ${p.demoLocation === 'newDemo' ? t('newDemo') : t('oldDemo')}</span>
@@ -814,11 +840,11 @@
                     </div>
                 </div>
 
-                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-100 w-full">
+                <div class="animate-fade-up w-full">
                     <h3 class="text-xl font-bold mb-4 ${theme.textMain}">${t('neighborhood')}</h3>
                     <div class="rounded-[2rem] border overflow-hidden ${theme.cardBg}">
                         <div class="relative h-48 w-full bg-[${C.bgDark}]">
-                            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover opacity-50 mix-blend-overlay" />
+                            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" loading="lazy" class="w-full h-full object-cover opacity-50 mix-blend-overlay" />
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <div class="w-12 h-12 bg-[${C.primary}]/20 rounded-full flex items-center justify-center animate-pulse">
                                     <div class="w-8 h-8 bg-[${C.primary}] rounded-full flex items-center justify-center shadow-lg"><i data-lucide="map-pin" class="w-4 h-4 text-white"></i></div>
@@ -841,7 +867,7 @@
                     </div>
                 </div>
 
-                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-150 w-full">
+                <div class="animate-fade-up w-full">
                     <h3 class="text-xl font-bold mb-4 ${theme.textMain}">${t('amenities')}</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         ${p.features[state.lang].map(f => `
@@ -853,20 +879,21 @@
                     </div>
                 </div>
 
-                <div id="dock-target" class="w-full h-[76px] relative z-50">
-                    <div id="dock-content" class="fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-100">
-                        <div class="${theme.islandBg} p-2.5 rounded-3xl flex gap-2 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
-                            <button class="flex-1 bg-[#25D366] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all">
-                                <i data-lucide="message-circle" class="w-5 h-5"></i><span>${t('whatsapp')}</span>
-                            </button>
-                            <button class="flex-1 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[${C.primary}]/30 hover:scale-[1.02] active:scale-95 transition-all">
-                                <i data-lucide="phone" class="w-5 h-5"></i><span>${t('callNow')}</span>
-                            </button>
-                        </div>
+                <!-- نقطة مراقبة شريط الاتصال -->
+                <div id="dock-target" class="w-full h-1 mt-4"></div>
+
+                <div id="dock-content" class="fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-300 z-50">
+                    <div class="${theme.islandBg} p-2.5 rounded-3xl flex gap-2">
+                        <button class="flex-1 bg-[#25D366] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i><span>${t('whatsapp')}</span>
+                        </button>
+                        <button class="flex-1 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[${C.primary}]/30 hover:scale-[1.02] active:scale-95 transition-all">
+                            <i data-lucide="phone" class="w-5 h-5"></i><span>${t('callNow')}</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-200 w-full">
+                <div class="animate-fade-up w-full mt-4">
                     <div class="border rounded-2xl p-5 flex items-center justify-between shadow-lg ${state.isDark ? `border-white/5 bg-gradient-to-r from-[${C.cardDark}] to-[${C.bgDark}]` : `border-[${C.borderLight}] bg-white`}">
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 bg-black rounded-full flex items-center justify-center border-2 border-[${C.primary}] p-1 relative">
@@ -888,7 +915,7 @@
                     </div>
                 </div>
                 
-                <div class="animate-in slide-in-from-bottom-8 duration-700 delay-300 w-full">
+                <div class="animate-fade-up w-full">
                     <h3 class="text-xl font-bold mb-4 ${theme.textMain}">${t('propertyDetails')}</h3>
                     <p class="text-sm leading-loose ${theme.textMuted}">${t('description')}</p>
                 </div>
@@ -914,18 +941,28 @@
             
             lucide.createIcons();
 
-            // Scroll behaviour for Dock (WhatsApp / Call CTA)
+            // استخدام تقنية IntersectionObserver للقضاء على الـ Scroll Lag نهائياً 
             const target = document.getElementById('dock-target');
             const content = document.getElementById('dock-content');
-            if(target && content) {
-                window.onscroll = () => {
-                    const rect = target.getBoundingClientRect();
-                    if(rect.top <= window.innerHeight - 24) content.className = "relative transition-all duration-100 z-50";
-                    else content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-100 z-50";
-                };
-                window.onscroll(); 
-            } else {
-                window.onscroll = null;
+            
+            if (target && content) {
+                window.onscroll = null; // إيقاف التنصت القديم لتوفير الموارد
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            content.className = "relative transition-all duration-300 z-50 mt-4";
+                        } else {
+                            content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-300 z-50";
+                        }
+                    });
+                }, { 
+                    root: null, 
+                    threshold: 0,
+                    rootMargin: '0px 0px 50px 0px'
+                });
+                
+                observer.observe(target);
             }
         };
 
@@ -934,6 +971,7 @@
     </script>
 </body>
 </html>
+
 
 
 
