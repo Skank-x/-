@@ -38,17 +38,21 @@
         .blend-multiply { mix-blend-mode: multiply; }
         .blend-screen { mix-blend-mode: screen; }
         
-        /* Map Pin Animation */
         .pin-bounce { animation: pinBounce 2s infinite; }
         @keyframes pinBounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
+        
+        .prose strong { color: #638ECB; font-weight: 800; }
+        .prose ul { list-style-type: disc; margin-right: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .prose li { margin-bottom: 0.25rem; }
+        .prose br { content: ""; display: block; margin-bottom: 0.5rem; }
     </style>
 </head>
-<body class="bg-[#F0F3FA] text-gray-900 transition-colors duration-500">
+<body class="bg-[#F0F3FA] text-gray-900 transition-colors duration-500 min-h-screen flex flex-col m-0 p-0">
 
-    <div id="app"></div>
+    <div id="app" class="flex-1 flex flex-col w-full"></div>
 
     <script>
         // --- 1. Data & Translations ---
@@ -69,7 +73,7 @@
             tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", filters: "تصفية", priceRange: "نطاق السعر", applyFilters: "تطبيق",
             mapView: "خريطة", gridView: "قائمة", compare: "مقارنة", addCompare: "أضف للمقارنة", compareLimit: "تم تحديد عقارين", compareNow: "قارن الآن",
             propertyCompare: "مقارنة العقارات", distanceToUni: "البعد عن الجامعة", addToHome: "أضف سكنك للشاشة الرئيسية", addToHomeDesc: "للوصول السريع وتجربة تشبه التطبيق",
-            reelsTitle: "جولات عقارية 🎬", addToHomeBtn: "إضافة"
+            addToHomeBtn: "إضافة"
           },
           en: {
             appName: "Saknk", login: "Sign up", changeLang: "Change Language", arabic: "العربية", english: "English",
@@ -87,15 +91,15 @@
             tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", filters: "Filters", priceRange: "Price Range", applyFilters: "Apply",
             mapView: "Map", gridView: "List", compare: "Compare", addCompare: "Add to Compare", compareLimit: "2 properties selected", compareNow: "Compare Now",
             propertyCompare: "Property Comparison", distanceToUni: "Distance to Uni", addToHome: "Add Saknk to Home Screen", addToHomeDesc: "For fast access and app-like experience",
-            reelsTitle: "Property Reels 🎬", addToHomeBtn: "Add"
+            addToHomeBtn: "Add"
           }
         };
 
-        // ألوان المنصة
         const C = {
             bgLight: '#F0F3FA', borderLight: '#D5DEEF', softBlue: '#B1C9EF', midBlue: '#8AAEE0', primary: '#638ECB', darkBlue: '#395886',
             bgDark: '#0b1221', cardDark: '#152033'  
         };
+        
         const mainLogoUrl = "https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png"; 
 
         const properties = [
@@ -151,12 +155,6 @@
           }
         ];
 
-        const reelsData = [
-            { id: 1, image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&h=1000&q=80", title: "جولة في شقة المرحلة الأولى" },
-            { id: 2, image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&h=1000&q=80", title: "أفخم ستوديو للطلاب" },
-            { id: 3, image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=600&h=1000&q=80", title: "فيلا الأحلام بديمو" }
-        ];
-
         // --- 2. Global State ---
         let state = {
             isDark: false, 
@@ -175,9 +173,37 @@
             isChatOpen: false,
             chatMessages: [],
             chatInput: '',
+            isBotTyping: false,
             contactType: 'tenant',
             imageIndex: 0,
             showPwaPrompt: true 
+        };
+
+        // --- Hardware Back Button Logic ---
+        window.addEventListener('popstate', (e) => {
+            if (state.selectedPropertyId) {
+                state.selectedPropertyId = null;
+                renderApp();
+            } else if (state.isChatOpen) {
+                state.isChatOpen = false;
+                renderApp();
+            } else if (state.showCompareModal) {
+                state.showCompareModal = false;
+                renderApp();
+            }
+        });
+
+        const navigateToProperty = (id) => {
+            window.history.pushState({ page: 'property' }, 'Property Details');
+            state.selectedPropertyId = id;
+            state.imageIndex = 0;
+            window.scrollTo(0,0);
+            renderApp();
+        };
+
+        const navigateHome = () => {
+            if(window.history.state !== null) window.history.back();
+            else { state.selectedPropertyId = null; window.scrollTo(0,0); renderApp(); }
         };
 
         // --- Helper Functions ---
@@ -215,6 +241,13 @@
             setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
         };
 
+        // --- Format Chat Message ---
+        const formatMessage = (text) => {
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\n/g, '<br/>');
+            return formatted;
+        };
+
         // --- State Mutations ---
         window.toggleTheme = () => { state.isDark = !state.isDark; renderApp(); };
         window.toggleLang = () => { state.lang = state.lang === 'ar' ? 'en' : 'ar'; document.dir = state.lang === 'ar' ? 'rtl' : 'ltr'; renderApp(); };
@@ -244,10 +277,8 @@
             renderApp();
         };
         
-        window.openCompareModal = () => { state.showCompareModal = true; renderApp(); };
-        window.closeCompareModal = () => { state.showCompareModal = false; renderApp(); };
-        window.selectProperty = (id) => { state.selectedPropertyId = id; state.imageIndex = 0; window.scrollTo(0,0); renderApp(); };
-        window.clearSelection = () => { state.selectedPropertyId = null; window.scrollTo(0,0); renderApp(); };
+        window.openCompareModal = () => { window.history.pushState({ page: 'compare' }, 'Compare'); state.showCompareModal = true; renderApp(); };
+        window.closeCompareModal = () => { if(window.history.state !== null) window.history.back(); else { state.showCompareModal = false; renderApp(); } };
         window.setContactType = (type) => { state.contactType = type; renderApp(); };
         window.submitForm = (e) => { e.preventDefault(); showToast(t('toastFormSuccess')); };
         window.nextImage = (e, len) => { e.stopPropagation(); state.imageIndex = (state.imageIndex + 1) % len; renderApp(); };
@@ -257,21 +288,29 @@
         // --- Chatbot Logic ---
         window.toggleChat = () => { 
             state.isChatOpen = !state.isChatOpen; 
-            if(state.isChatOpen && state.chatMessages.length === 0) {
-                state.chatMessages = [{ sender: 'ai', text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 أنا المساعد الذكي، كيف يمكنني مساعدتك؟' : 'Welcome! 🤖 I am your AI assistant.' }];
+            if(state.isChatOpen) {
+                window.history.pushState({ page: 'chat' }, 'Chat');
+                if(state.chatMessages.length === 0) {
+                    state.chatMessages = [{ sender: 'ai', text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 أنا المساعد الذكي، كيف يمكنني مساعدتك؟' : 'Welcome! 🤖 I am your AI assistant.' }];
+                }
+            } else {
+                if(window.history.state !== null) window.history.back();
             }
             renderApp(); 
             setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
         };
-        window.closeChat = () => { state.isChatOpen = false; renderApp(); };
-        window.updateChatInput = (val) => { state.chatInput = val; };
+        
+        window.closeChat = () => { if(window.history.state !== null) window.history.back(); else { state.isChatOpen = false; renderApp(); } };
+        window.updateChatInput = (val) => { state.chatInput = val; renderApp(); };
         
         window.sendChatMessage = (e, textOverride) => {
             if(e) e.preventDefault();
             const text = textOverride || state.chatInput;
-            if(!text.trim()) return;
+            if(!text.trim() || state.isBotTyping) return;
+            
             state.chatMessages.push({ sender: 'user', text });
             state.chatInput = '';
+            state.isBotTyping = true;
             renderApp();
             setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
             
@@ -282,6 +321,7 @@
                 if (query.includes('سعر') || query.includes('cheap') || query.includes('رخيص')) reply = state.lang === 'ar' ? 'الأسعار تبدأ من 18,000 ج.م، ولدينا سكن مشترك بـ 4,500 ج.م للفرد.' : 'Prices start at 18,000 EGP, co-living from 4,500 EGP/person.';
                 if (query.includes('مرحلة') || query.includes('رابعة') || query.includes('phase')) reply = state.lang === 'ar' ? 'لدينا عقارات تغطي جميع المراحل من الأولى للرابعة! استخدم الفلاتر للبحث بدقة.' : 'We have properties in phases 1 to 4! Use filters to refine search.';
                 
+                state.isBotTyping = false;
                 state.chatMessages.push({ sender: 'ai', text: reply });
                 renderApp();
                 setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
@@ -290,24 +330,26 @@
 
         // --- Render Functions ---
         const renderAmbientGlow = () => `
-            <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+            <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none" style="will-change: transform; transform: translateZ(0);">
                 <div class="absolute top-[-10%] ${state.lang === 'ar' ? 'right-[-10%]' : 'left-[-10%]'} w-[60vw] h-[60vw] rounded-full blur-[140px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.primary}]/15` : `bg-[${C.midBlue}]/25`}" style="animation: float 15s ease-in-out infinite"></div>
                 <div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] transition-opacity duration-1000 ${state.isDark ? `bg-[${C.darkBlue}]/20` : `bg-[${C.primary}]/15`}" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div>
             </div>
         `;
 
-        // PWA Banner (Inline)
+        // PWA Banner - Slim and Compact version
         const renderPwaPrompt = (theme) => {
             if (!state.showPwaPrompt) return '';
             return `
-            <div class="w-full ${theme.islandBg} px-4 py-3 rounded-[1.5rem] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
-                <img src="${mainLogoUrl}" class="w-10 h-10 rounded-xl bg-white p-1 object-contain shadow-sm border border-gray-100">
-                <div class="flex-1 min-w-0">
-                    <p class="font-bold text-sm ${theme.textMain} truncate">${t('addToHome')}</p>
-                    <p class="text-[11px] ${theme.textMuted} truncate mt-0.5">${t('addToHomeDesc')}</p>
+            <div class="w-full ${theme.islandBg} px-4 py-2.5 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} shadow-sm">
+                <div class="bg-white rounded-lg p-1.5 shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="${mainLogoUrl}" class="w-7 h-7 object-contain">
                 </div>
-                <button onclick="window.dismissPwa()" class="bg-[${C.primary}] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all flex-shrink-0">${t('addToHomeBtn')}</button>
-                <button onclick="window.dismissPwa()" class="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors flex-shrink-0 ml-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <div class="flex-1">
+                    <p class="font-bold text-sm ${theme.textMain} leading-none mb-1.5">${t('addToHome')}</p>
+                    <p class="text-[11px] ${theme.textMuted} leading-tight">${t('addToHomeDesc')}</p>
+                </div>
+                <button onclick="window.dismissPwa()" class="bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 active:scale-95 transition-all flex-shrink-0">${t('addToHomeBtn')}</button>
+                <button onclick="window.dismissPwa()" class="p-1 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors flex-shrink-0 ml-1"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             `;
         };
@@ -366,7 +408,7 @@
                                 <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${p1.baths}</span></div>
                                 <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${p1.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
                             </div>
-                            <button onclick="window.selectProperty(${p1.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
+                            <button onclick="window.navigateToProperty(${p1.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
                         </div>
                         <div class="border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} rounded-2xl p-4 flex flex-col gap-4">
                             <img src="${p2.images[0]}" class="w-full h-40 object-cover rounded-xl">
@@ -377,7 +419,7 @@
                                 <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('baths')}</span> <span class="font-bold ${theme.textMain}">${p2.baths}</span></div>
                                 <div class="flex justify-between border-b border-white/5 pb-2"><span class="${theme.textMuted}">${t('area')}</span> <span class="font-bold ${theme.textMain}">${p2.area} ${state.lang==='ar'?'م²':'m²'}</span></div>
                             </div>
-                            <button onclick="window.selectProperty(${p2.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
+                            <button onclick="window.navigateToProperty(${p2.id}); window.closeCompareModal();" class="mt-auto bg-[${C.primary}] text-white py-2 rounded-xl font-bold w-full">التفاصيل</button>
                         </div>
                     </div>
                 </div>
@@ -388,7 +430,7 @@
         const renderChatbot = () => {
             if(!state.isChatOpen) {
                 return `
-                <div class="fixed bottom-6 right-6 z-[90] animate-in fade-in zoom-in duration-300">
+                <div class="fixed bottom-6 right-6 z-[150] animate-in fade-in zoom-in duration-300">
                     <button onclick="window.toggleChat()" class="w-14 h-14 rounded-full bg-[${C.darkBlue}] flex items-center justify-center text-white shadow-[0_8px_30px_rgba(57,88,134,0.4)] hover:scale-110 active:scale-95 transition-all">
                         <i data-lucide="bot" class="w-7 h-7"></i>
                         <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-[${C.primary}] border-2 border-[${C.bgDark}] rounded-full animate-ping"></span>
@@ -398,8 +440,8 @@
 
             const msgsHTML = state.chatMessages.map(msg => `
                 <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2">
-                    <div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user' ? `bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white rounded-tr-sm font-medium shadow-md` : `bg-[${C.cardDark}] text-white border border-white/10 rounded-tl-sm shadow-sm`}">
-                        ${msg.text}
+                    <div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed prose ${msg.sender === 'user' ? `bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white rounded-tr-sm font-medium shadow-md` : `bg-[${C.cardDark}] text-white border border-white/10 rounded-tl-sm shadow-sm`}">
+                        ${formatMessage(msg.text)}
                     </div>
                 </div>
             `).join('');
@@ -416,7 +458,7 @@
             ` : '';
 
             return `
-            <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" dir="${state.lang === 'ar' ? 'rtl' : 'ltr'}">
+            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" dir="${state.lang === 'ar' ? 'rtl' : 'ltr'}">
                 <div class="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 cursor-pointer" onclick="window.closeChat()"></div>
                 <div class="relative w-full max-w-[360px] h-[680px] max-h-[85vh] bg-[${C.bgDark}] rounded-[3rem] border-[6px] border-[${C.primary}] shadow-[0_0_60px_rgba(99,142,203,0.3)] flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
                     <div class="absolute top-0 inset-x-0 h-7 flex justify-center z-50 pointer-events-none">
@@ -430,11 +472,11 @@
                     <div class="pt-10 pb-4 px-5 flex items-center justify-between bg-gradient-to-b from-[${C.cardDark}] to-[${C.bgDark}] border-b border-white/10 z-40 relative">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-[${C.primary}] flex items-center justify-center text-white shadow-lg relative">
-                                <i data-lucide="bot" class="w-5 h-5"></i>
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
                                 <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[${C.cardDark}] rounded-full"></div>
                             </div>
                             <div>
-                                <h3 class="text-white font-bold text-sm">Saknk AI</h3>
+                                <h3 class="text-white font-bold text-sm">Saknk AI ✨</h3>
                                 <p class="text-[${C.softBlue}] text-xs font-bold">Online</p>
                             </div>
                         </div>
@@ -443,11 +485,19 @@
                     <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[${C.bgDark}] hide-scrollbar">
                         ${msgsHTML}
                         ${quickReplies}
+                        ${state.isBotTyping ? `
+                            <div class="flex justify-start animate-in fade-in slide-in-from-bottom-2">
+                                <div class="bg-[${C.cardDark}] text-gray-300 text-sm p-3.5 rounded-2xl rounded-tl-sm border border-white/10 shadow-sm flex items-center gap-2">
+                                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-[${C.primary}]"></i>
+                                    <span>${state.lang === 'ar' ? 'يفكر...' : 'Thinking...'}</span>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="p-4 bg-[${C.cardDark}] border-t border-white/10 relative z-40">
                         <form onsubmit="window.sendChatMessage(event)" class="flex gap-2 relative">
-                            <input type="text" oninput="window.updateChatInput(this.value)" value="${state.chatInput}" placeholder="${state.lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message...'}" class="flex-1 bg-black/50 text-white text-sm px-4 py-3.5 rounded-full border border-white/10 outline-none focus:border-[${C.primary}] transition-colors" />
-                            <button type="submit" class="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-[${C.primary}] text-white hover:scale-105 active:scale-95 shadow-lg shadow-[${C.primary}]/20">
+                            <input type="text" oninput="window.updateChatInput(this.value)" value="${state.chatInput}" placeholder="${state.lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Type your message...'}" class="flex-1 bg-black/50 text-white text-sm px-4 py-3.5 rounded-full border border-white/10 outline-none focus:border-[${C.primary}] transition-colors" ${state.isBotTyping ? 'disabled' : ''} />
+                            <button type="submit" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${state.isBotTyping || !state.chatInput.trim() ? 'bg-gray-600 cursor-not-allowed text-gray-400' : `bg-[${C.primary}] hover:scale-105 active:scale-95 shadow-lg shadow-[${C.primary}]/20 text-white`}">
                                 <i data-lucide="send" class="w-4 h-4 ${state.lang === 'ar' ? 'rotate-180 -ml-1' : 'ml-1'}"></i>
                             </button>
                         </form>
@@ -467,10 +517,9 @@
                 return matchLocation && matchPhase;
             });
 
-            // TabsHTML now uses flex-col and gap-3 to be part of the main flex flow
             const tabsHTML = !state.showFavorites ? `
-                <div class="transition-all duration-500 animate-in fade-in slide-in-from-top-4 w-full flex flex-col gap-3">
-                    <div class="${theme.islandBg} rounded-[1.5rem] p-1.5 flex items-center justify-between border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
+                <div class="transition-all duration-500 w-full">
+                    <div class="${theme.islandBg} rounded-[1.5rem] p-1.5 flex items-center justify-between border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
                         <div class="flex w-full relative">
                             <div class="absolute inset-y-0 w-1/2 bg-[${C.primary}] rounded-xl transition-all duration-300 ease-out shadow-md ${state.activeLocation === 'newDemo' ? (state.lang === 'ar' ? 'right-0' : 'left-0') : (state.lang === 'ar' ? 'right-1/2' : 'left-1/2')}"></div>
                             <button onclick="window.setLocation('newDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'newDemo' ? 'text-white' : `${theme.textMuted} hover:${theme.textMain}`}">${t('newDemo')}</button>
@@ -483,7 +532,7 @@
                         </div>
                     </div>
                     ${state.activeLocation === 'newDemo' ? `
-                    <div class="${theme.islandBg} rounded-[1.2rem] p-1.5 flex items-center gap-1 overflow-x-auto hide-scrollbar snap-x animate-in slide-in-from-top-2 duration-300 border ${state.isDark ? 'border-white/5' : `border-[${C.borderLight}]`}">
+                    <div class="mt-4 ${theme.islandBg} rounded-[1.2rem] p-1.5 flex items-center gap-1 overflow-x-auto hide-scrollbar snap-x border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`}">
                         <span class="text-xs font-bold whitespace-nowrap px-3 ${theme.textMuted}">${t('choosePhase')}:</span>
                         <div class="flex gap-1">
                             ${[{id:'all',l:t('all')}, {id:'phase1',l:t('phase1')}, {id:'phase2',l:t('phase2')}, {id:'phase3',l:t('phase3')}, {id:'phase4',l:t('phase4')}].map(ph => `
@@ -495,7 +544,7 @@
             ` : '';
 
             const mapHTML = `
-                <div class="w-full h-[65vh] rounded-[2rem] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500 w-full">
+                <div class="w-full h-[65vh] rounded-[2rem] border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500">
                     <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover ${state.isDark ? 'opacity-40 grayscale' : 'opacity-70'} mix-blend-overlay">
                     <div class="absolute inset-0 bg-gradient-to-t ${state.isDark ? `from-[${C.bgDark}]/80` : `from-[${C.bgLight}]/50`} via-transparent"></div>
                     
@@ -512,7 +561,7 @@
                                 <img src="${p.images[0]}" class="w-full h-20 object-cover rounded-lg mb-2">
                                 <p class="text-[10px] font-bold truncate ${theme.textMain} mb-1">${p.title[state.lang]}</p>
                                 <p class="text-sm font-black text-[${C.primary}]">${p.price} <span class="text-[10px] font-normal">${p.currency[state.lang]}</span></p>
-                                <button onclick="window.selectProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">التفاصيل</button>
+                                <button onclick="window.navigateToProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">التفاصيل</button>
                             </div>
                         </div>
                     `).join('')}
@@ -527,7 +576,7 @@
                     <h3 class="text-2xl font-black mb-2 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] bg-clip-text text-transparent">${state.showFavorites ? t('noFavoritesTitle') : "لا توجد عقارات مطابقة"}</h3>
                 </div>
             ` : displayedProperties.map((p, i) => `
-                <div class="animate-fade-up group relative ${theme.cardBg} rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 cursor-pointer self-start w-full" style="animation-delay: ${i*0.1}s" onclick="window.selectProperty(${p.id})">
+                <div class="animate-fade-up group relative ${theme.cardBg} rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 cursor-pointer self-start" style="animation-delay: ${i*0.1}s" onclick="window.navigateToProperty(${p.id})">
                     <div class="absolute -inset-1 bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] rounded-[2.5rem] opacity-0 group-hover:opacity-20 blur-xl transition duration-700 pointer-events-none"></div>
                     <div class="relative h-60 overflow-hidden m-2 rounded-t-[1.5rem] rounded-b-xl z-10">
                         <img src="${p.images[0]}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
@@ -571,28 +620,6 @@
                 </div>
             `).join('');
 
-            const reelsHTML = (!state.showFavorites && displayedProperties.length > 0 && state.viewMode === 'grid') ? `
-                <div class="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 w-full pt-4">
-                    <h3 class="text-2xl font-bold mb-4 px-2 ${theme.textMain}">${t('reelsTitle')}</h3>
-                    <div class="flex overflow-x-auto gap-4 pb-4 px-2 snap-x hide-scrollbar">
-                        ${reelsData.map(reel => `
-                            <div class="min-w-[160px] w-[160px] h-[280px] snap-center rounded-3xl overflow-hidden border ${state.isDark ? 'border-white/10' : `border-[${C.borderLight}]`} relative group cursor-pointer shadow-lg hover:-translate-y-2 transition-transform">
-                                <img src="${reel.image}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform border border-white/30">
-                                        <i data-lucide="play-circle" class="w-6 h-6 fill-white/50"></i>
-                                    </div>
-                                </div>
-                                <div class="absolute bottom-4 left-3 right-3 text-center">
-                                    <p class="text-white text-xs font-bold line-clamp-2 leading-relaxed">${reel.title}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : '';
-
             const formHTML = !state.showFavorites ? `
                 <div class="${theme.cardBg} rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500 w-full">
                     <div class="absolute top-0 ${state.lang === 'ar' ? 'right-0' : 'left-0'} w-40 h-40 bg-[${C.primary}]/10 rounded-full blur-[60px]"></div>
@@ -628,22 +655,21 @@
                 </div>
             ` : '';
 
-            // Using gap-5 strictly inside <main> to keep perfect spacing
+            // تم الاعتماد على gap-6 الموحد بدون أي مسافات عشوائية (Margin top/bottom)
             return `
-                <main class="flex-1 px-4 pt-[104px] pb-12 flex flex-col gap-5 relative z-10 max-w-7xl mx-auto w-full">
+                <main class="flex-1 px-4 pt-[104px] pb-12 flex flex-col gap-6 relative z-10 max-w-7xl mx-auto w-full">
                     ${pwaHTML}
                     ${tabsHTML}
-                    <div class="flex justify-between items-end px-2 pt-2">
+                    <div class="flex justify-between items-end px-2">
                         <h2 class="text-2xl font-black tracking-tight ${theme.textMain}">${state.showFavorites ? t('favorites') : (state.activeLocation === 'newDemo' ? t('newDemoTitle') : t('oldDemoTitle'))}</h2>
                     </div>
                     
                     ${state.viewMode === 'grid' ? `
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 w-full">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                             ${cardsHTML}
                         </div>
                     ` : mapHTML}
 
-                    ${reelsHTML}
                     ${formHTML}
                 </main>
             `;
@@ -662,7 +688,7 @@
                     <h3 class="text-2xl font-bold mb-6 ${theme.textMain}">${t('recommended')}</h3>
                     <div class="flex overflow-x-auto gap-4 pb-6 snap-x hide-scrollbar">
                         ${suggestedProps.map(sProp => `
-                            <div onclick="window.selectProperty(${sProp.id})" class="min-w-[280px] w-[280px] snap-center rounded-[2rem] overflow-hidden border ${theme.cardBg} hover:-translate-y-2 transition-transform cursor-pointer">
+                            <div onclick="window.navigateToProperty(${sProp.id})" class="min-w-[280px] w-[280px] snap-center rounded-[2rem] overflow-hidden border ${theme.cardBg} hover:-translate-y-2 transition-transform cursor-pointer">
                                 <div class="h-40 relative">
                                     <img src="${sProp.images[0]}" class="w-full h-full object-cover" />
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -688,7 +714,7 @@
             ` : '';
 
             return `
-            <div class="relative h-[65vh] w-full rounded-b-[3rem] overflow-hidden shadow-2xl shrink-0 z-10 group mt-0 max-w-7xl mx-auto">
+            <div class="relative h-[65vh] w-full rounded-b-[3rem] overflow-hidden shadow-2xl shrink-0 z-10 group mt-0">
                 <img src="${p.images[state.imageIndex]}" class="w-full h-full object-cover animate-in fade-in duration-500" />
                 <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent ${state.isDark ? `to-[${C.bgDark}]` : `to-[${C.bgLight}]`}"></div>
                 
@@ -701,7 +727,7 @@
                 ` : ''}
 
                 <div class="absolute top-6 left-6 right-6 flex justify-between items-center z-20 pt-4">
-                    <button onclick="window.clearSelection()" class="w-12 h-12 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-105 active:scale-95 transition shadow-lg">
+                    <button onclick="window.navigateHome()" class="w-12 h-12 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-105 active:scale-95 transition shadow-lg">
                         <i data-lucide="${state.lang === 'ar' ? 'arrow-right' : 'arrow-left'}" class="w-5 h-5"></i>
                     </button>
                     <div class="flex gap-3">
@@ -715,6 +741,7 @@
                 </div>
             </div>
 
+            <!-- تم تطبيق flex gap موحد -->
             <main class="px-4 sm:px-6 -mt-16 relative z-20 flex-1 flex flex-col gap-6 max-w-4xl mx-auto w-full pb-12">
                 <div class="${theme.islandBg} rounded-[2rem] p-6 shadow-md animate-in slide-in-from-bottom-8 duration-700 w-full">
                     <div class="flex justify-between items-start mb-4">
@@ -839,36 +866,29 @@
 
         const renderApp = () => {
             const theme = getTheme();
-            document.body.className = `${theme.bgMain} ${theme.textMain} transition-colors duration-500`;
+            document.body.className = `${theme.bgMain} ${theme.textMain} transition-colors duration-500 min-h-screen flex flex-col m-0 p-0`;
             
             const app = document.getElementById('app');
             app.innerHTML = `
-                <div class="min-h-screen flex flex-col relative overflow-x-hidden pb-0">
-                    ${renderAmbientGlow()}
-                    ${!state.selectedPropertyId ? renderHeader(theme) : ''}
-                    ${!state.selectedPropertyId ? renderHome() : renderPropertyDetails()}
-                    ${renderFooter(theme)}
-                    ${renderChatbot()}
-                    ${renderCompareModal(theme)}
-                </div>
+                ${renderAmbientGlow()}
+                ${!state.selectedPropertyId ? renderHeader(theme) : ''}
+                ${!state.selectedPropertyId ? renderHome() : renderPropertyDetails()}
+                ${renderFooter(theme)}
+                ${renderChatbot()}
+                ${renderCompareModal(theme)}
             `;
             
             lucide.createIcons();
 
-            if(state.selectedPropertyId) {
-                const target = document.getElementById('dock-target');
-                const content = document.getElementById('dock-content');
-                if(target && content) {
-                    window.onscroll = () => {
-                        const rect = target.getBoundingClientRect();
-                        if(rect.top <= window.innerHeight - 24) {
-                            content.className = "relative transition-all duration-100";
-                        } else {
-                            content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-100 z-50";
-                        }
-                    };
-                    window.onscroll(); 
-                }
+            const target = document.getElementById('dock-target');
+            const content = document.getElementById('dock-content');
+            if(target && content) {
+                window.onscroll = () => {
+                    const rect = target.getBoundingClientRect();
+                    if(rect.top <= window.innerHeight - 24) content.className = "relative transition-all duration-100 z-50";
+                    else content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-100 z-50";
+                };
+                window.onscroll(); 
             } else {
                 window.onscroll = null;
             }
@@ -878,4 +898,4 @@
         renderApp();
     </script>
 </body>
-  </html>
+</html>
