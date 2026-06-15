@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -25,7 +26,7 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* حركات ناعمة وسريعة جداً بدون لاج */
+        /* حركات الانيميشن */
         @keyframes float {
           0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
           50% { transform: translate3d(0, -20px, 0) scale(1.05); }
@@ -58,11 +59,33 @@
         .prose strong { color: #638ECB; font-weight: 800; }
         .prose ul { list-style-type: disc; margin-right: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
         .prose li { margin-bottom: 0.25rem; }
+
+        /* شاشة التحميل */
+        #splash-screen {
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+        }
+        #splash-screen.hidden-splash {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body class="bg-[#F0F3FA] text-gray-900 transition-colors duration-500 min-h-screen flex flex-col m-0 p-0">
 
-    <div id="app" class="flex-1 flex flex-col w-full"></div>
+    <!-- شاشة التحميل (Splash Screen) -->
+    <div id="splash-screen" class="fixed inset-0 z-[9999] bg-[#F0F3FA] flex items-center justify-center flex-col gap-4">
+        <div class="relative w-32 h-32 flex items-center justify-center">
+            <div class="absolute inset-0 bg-[#638ECB] opacity-20 rounded-full animate-ping"></div>
+            <img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="w-24 object-contain animate-bounce relative z-10">
+        </div>
+        <div class="flex gap-1.5 items-center mt-2">
+            <div class="w-2 h-2 rounded-full bg-[#395886] animate-pulse"></div>
+            <div class="w-2 h-2 rounded-full bg-[#638ECB] animate-pulse" style="animation-delay: 0.2s"></div>
+            <div class="w-2 h-2 rounded-full bg-[#B1C9EF] animate-pulse" style="animation-delay: 0.4s"></div>
+        </div>
+    </div>
+
+    <div id="app" class="flex-1 flex flex-col w-full opacity-0 transition-opacity duration-700"></div>
 
     <script>
         // --- 1. Constants & Styling ---
@@ -135,15 +158,38 @@
             showPwaPrompt: true 
         };
 
-        // --- Hardware Back Button Logic ---
-        window.addEventListener('popstate', (e) => {
+        // --- Routing & History State Logic ---
+        const syncUrlToState = () => {
+            const url = new URL(window.location);
             if (state.selectedPropertyId) {
+                url.searchParams.set('id', state.selectedPropertyId);
+            } else {
+                url.searchParams.delete('id');
+            }
+            window.history.pushState({ ...state }, '', url);
+        };
+
+        const loadStateFromUrl = () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (id && properties.find(p => p.id === parseInt(id))) {
+                state.selectedPropertyId = parseInt(id);
+            } else {
                 state.selectedPropertyId = null;
-                renderApp();
-            } else if (state.isChatOpen) {
+            }
+        };
+
+        // معالجة زر الرجوع (الهاتف أو المتصفح)
+        window.addEventListener('popstate', (e) => {
+            // لو الشات مفتوح، اقفله الأول وما تغيرش الصفحة
+            if (state.isChatOpen) {
                 state.isChatOpen = false;
                 renderApp();
+                return;
             }
+            // غير كدة، حمل البيانات من الرابط واعمل ريندر
+            loadStateFromUrl();
+            renderApp();
         });
 
         // --- Helper Functions ---
@@ -158,10 +204,7 @@
                 textMain: state.isDark ? `text-[${C.bgLight}]` : `text-[${C.bgDark}]`,
                 textMuted: state.isDark ? `text-[${C.softBlue}]` : `text-[${C.darkBlue}]/70`,
                 cardBg: state.isDark ? `bg-[${C.cardDark}]/80 border border-[${C.darkBlue}]/30 shadow-2xl` : `bg-white/90 border border-[${C.borderLight}] shadow-xl`,
-                
-                // استخدام كلاسات Tailwind النقية للبلور للحصول على نتيجة 100% مضمونة وسريعة
                 blurBg: state.isDark ? `bg-[${C.cardDark}]/60 backdrop-blur-xl border-white/10` : `bg-white/60 backdrop-blur-xl border-white/50`,
-                
                 btnBg: state.isDark ? `bg-[${C.darkBlue}]/30 hover:bg-[${C.darkBlue}]/50 border border-transparent` : `bg-[${C.borderLight}]/50 hover:bg-[${C.softBlue}]/50 border border-[${C.borderLight}]/50`,
                 inputBg: state.isDark ? `bg-[${C.bgDark}]/50 border-[${C.darkBlue}]/50 text-white focus:border-[${C.primary}]` : `bg-white border-[${C.borderLight}] text-[${C.bgDark}] focus:border-[${C.primary}]`,
                 inputWrapperBg: state.isDark ? `bg-[${C.bgDark}]/50 border-[${C.darkBlue}]/50 text-white focus-within:border-[${C.primary}]` : `bg-white border-[${C.borderLight}] text-[${C.bgDark}] focus-within:border-[${C.primary}]`
@@ -183,7 +226,6 @@
 
         const showToast = (msg) => {
             const toast = document.createElement('div');
-            // البلور بالإشعارات
             toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[200] ${state.isDark ? `bg-[${C.cardDark}]/80 text-white` : 'bg-white/80 text-black'} backdrop-blur-lg border border-[${C.primary}]/50 px-6 py-3.5 rounded-2xl font-bold shadow-lg animate-in slide-in-from-top-10 fade-in duration-300 flex items-center gap-2 whitespace-nowrap`;
             toast.innerHTML = msg;
             document.body.appendChild(toast);
@@ -202,16 +244,18 @@
         window.dismissPwa = () => { state.showPwaPrompt = false; renderApp(); };
         
         window.navigateToProperty = (id) => {
-            window.history.pushState({ page: 'property' }, 'Property Details');
             state.selectedPropertyId = id;
             state.imageIndex = 0;
             window.scrollTo(0,0);
+            syncUrlToState(); // تحديث الرابط
             renderApp();
         };
 
         window.navigateHome = () => {
-            if(window.history.state !== null) window.history.back();
-            else { state.selectedPropertyId = null; window.scrollTo(0,0); renderApp(); }
+            state.selectedPropertyId = null;
+            window.scrollTo(0,0);
+            syncUrlToState(); // تحديث الرابط وحذف ال ID
+            renderApp();
         };
 
         window.toggleFav = (id, e) => {
@@ -229,18 +273,21 @@
 
         // --- Chatbot Logic ---
         window.toggleChat = () => { 
-            state.isChatOpen = !state.isChatOpen; 
-            if(state.isChatOpen) {
-                window.history.pushState({ page: 'chat' }, 'Chat');
+            if(!state.isChatOpen) {
+                state.isChatOpen = true; 
+                window.history.pushState({ chat: true }, ''); // حفظ هيستوري عشان زر الرجوع يقفله
                 if(state.chatMessages.length === 0) {
                     state.chatMessages = [{ sender: 'ai', text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 أنا المساعد الذكي، كيف يمكنني مساعدتك؟' : 'Welcome to Saknk! 🤖 I am your AI assistant.' }];
                 }
-            } else { if(window.history.state !== null) window.history.back(); }
+            } else {
+                window.history.back(); // لو داس على الزرار المفتوح يعمل Back فيقفل الشات
+                return;
+            }
             renderApp(); 
             setTimeout(() => { const el = document.getElementById('chat-messages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
         };
         
-        window.closeChat = () => { if(window.history.state !== null) window.history.back(); else { state.isChatOpen = false; renderApp(); } };
+        window.closeChat = () => { window.history.back(); }; // زرار الإغلاق داخل الشات يعمل back
         
         window.sendChatMessage = (e, textOverride) => {
             if(e) e.preventDefault();
@@ -270,7 +317,6 @@
         // --- UI Rendering ---
         const renderAmbientGlow = () => `
             <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none" style="will-change: transform; transform: translateZ(0);">
-                <!-- الكرات المضيئة تمر تحت البانر لتوضيح البلور -->
                 <div class="absolute top-[0%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[600px] h-[300px] rounded-full blur-[80px] transition-opacity duration-1000 opacity-60 ${state.isDark ? `bg-[${C.primary}]` : `bg-[${C.midBlue}]`}" style="animation: float 10s ease-in-out infinite"></div>
                 <div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] transition-opacity duration-1000 opacity-40 ${state.isDark ? `bg-[${C.darkBlue}]` : `bg-[${C.primary}]`}" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div>
             </div>
@@ -295,7 +341,6 @@
 
         const renderHeader = (theme) => `
             <div class="fixed top-4 left-4 right-4 z-40 max-w-7xl mx-auto animate-fade-up">
-                <!-- تم استخدام كود البلور النقي من تيلويند لضمان عمله 100% -->
                 <div class="border ${theme.blurBg} rounded-[1.5rem] px-5 py-3 flex justify-between items-center transition-all duration-300 shadow-sm">
                     <div class="flex items-center gap-3 cursor-pointer" onclick="window.navigateHome()">
                         <img src="${mainLogoUrl}" alt="Logo" class="h-10 w-auto" style="object-fit: contain;">
@@ -698,10 +743,12 @@
                     </div>
                 </div>
 
-                <div id="dock-target" class="w-full h-1 mt-4"></div>
+                <!-- نقطة توقف أزرار التواصل -->
+                <div id="dock-target" class="w-full h-16 mt-4"></div>
 
-                <div id="dock-content" class="fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-300 z-50">
-                    <div class="border ${theme.blurBg} p-2.5 rounded-3xl flex gap-2 shadow-sm">
+                <!-- أزرار التواصل -->
+                <div id="dock-content" class="fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto z-50 transition-all duration-300">
+                    <div class="border ${theme.blurBg} p-2.5 rounded-3xl flex gap-2 shadow-lg">
                         <button class="flex-1 bg-[#25D366] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all">
                             <i data-lucide="message-circle" class="w-5 h-5"></i><span>${t('whatsapp')}</span>
                         </button>
@@ -711,8 +758,9 @@
                     </div>
                 </div>
 
-                <div class="animate-fade-up w-full mt-4">
-                    <div class="border rounded-2xl p-5 flex items-center justify-between shadow-lg ${state.isDark ? `border-white/5 bg-gradient-to-r from-[${C.cardDark}] to-[${C.bgDark}]` : `border-[${C.borderLight}] bg-white`}">
+                <!-- بيانات الوكيل (تستقر الأزرار فوقها) -->
+                <div class="animate-fade-up w-full mt-2 relative z-20">
+                    <div class="border rounded-2xl p-5 flex items-center justify-between shadow-sm ${state.isDark ? `border-white/5 bg-gradient-to-r from-[${C.cardDark}] to-[${C.bgDark}]` : `border-[${C.borderLight}] bg-white`}">
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 bg-black rounded-full flex items-center justify-center border-2 border-[${C.primary}] p-1 relative">
                                 <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.agent.name)}&background=152033&color=638ECB" class="w-full h-full rounded-full" />
@@ -768,15 +816,15 @@
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
-                            content.className = "relative transition-all duration-300 z-50 mt-4";
-                        } else {
-                            content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto transition-all duration-300 z-50";
+                            content.className = "relative z-40 w-full transition-all duration-300";
+                        } else if (entry.boundingClientRect.top > 0) {
+                            content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto z-50 transition-all duration-300";
                         }
                     });
                 }, { 
                     root: null, 
                     threshold: 0,
-                    rootMargin: '0px 0px 50px 0px'
+                    rootMargin: '0px 0px 20px 0px'
                 });
                 
                 observer.observe(target);
@@ -784,11 +832,26 @@
         };
 
         // --- Init ---
-        renderApp();
+        window.onload = () => {
+            // 1. قراءة الـ URL لتحديد إذا كنا داخل تفاصيل عقار مباشرة
+            loadStateFromUrl();
+            
+            // 2. إظهار التطبيق وتجهيزه
+            renderApp();
+            document.getElementById('app').style.opacity = '1';
+            
+            // 3. إخفاء شاشة التحميل بعد ثانية ونصف
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if(splash) {
+                    splash.classList.add('hidden-splash');
+                    setTimeout(() => splash.remove(), 600);
+                }
+            }, 1500);
+        };
     </script>
 </body>
 </html>
-
 
 
 
