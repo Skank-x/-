@@ -107,9 +107,9 @@
                 neighborhood: "الأماكن القريبة", description: "اكتشف الفخامة في هذا العقار الرائع المصمم لتلبية أرقى معايير الحياة العصرية. يتميز بتشطيبات راقية، وموقع استراتيجي يضمن لك الراحة والهدوء.",
                 recommended: "عقارات مميزة", whatsapp: "واتساب", callNow: "إتصل الآن", gender_male: "سكن طلاب", gender_female: "سكن طالبات",
                 gender_family: "سكن عائلات", occupants: "أفراد", contactUs: "تواصل معنا", contactDesc: "نحن هنا لمساعدتك في إيجاد سكنك المثالي أو عرض عقارك.",
-                name: "الاسم بالكامل", phone: "رقم الواتساب", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
+                name: "الاسم بالكامل", phone: "رقم الهاتف", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
                 userType: "صفتي", landlord: "مالك العقار", broker: "سمسار", send: "إرسال الطلب", favorites: "المفضلة",
-                noFavoritesTitle: "قائمتك فارغة", toastFavAdd: "تمت الإضافة للمفضلة بنجاح 🤍", toastFavRemove: "تم الإزالة من المفضلة", toastFormSuccess: "تم إرسال طلبك بنجاح ✅",
+                noFavoritesTitle: "قائمتك فارغة", toastFavAdd: "تمت الإضافة للمفضلة بنجاح 🤍", toastFavRemove: "تم الإزالة من المفضلة", toastFormSuccess: "تم توجيهك للتليجرام لإرسال الطلب ✅",
                 tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", 
                 addToHome: "أضف سكنك للشاشة", addToHomeDesc: "للوصول السريع وتجربة تشبه التطبيق", addToHomeBtn: "إضافة"
             },
@@ -122,9 +122,9 @@
                 neighborhood: "Neighborhood", description: "Discover luxury in this exquisite property designed to meet the highest standards of modern living. Featuring premium finishes and a strategic location.",
                 recommended: "Featured Properties", whatsapp: "WhatsApp", callNow: "Call Now", gender_male: "Male Students", gender_female: "Female Students",
                 gender_family: "Families", occupants: "Persons", contactUs: "Contact Us", contactDesc: "We are here to help you find your perfect home.",
-                name: "Full Name", phone: "WhatsApp", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
+                name: "Full Name", phone: "Phone Number", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
                 userType: "My Role", landlord: "Property Owner", broker: "Broker", send: "Submit Request", favorites: "Favorites",
-                noFavoritesTitle: "Your List is Empty", toastFavAdd: "Added to favorites 🤍", toastFavRemove: "Removed from favorites", toastFormSuccess: "Request sent successfully ✅",
+                noFavoritesTitle: "Your List is Empty", toastFavAdd: "Added to favorites 🤍", toastFavRemove: "Removed from favorites", toastFormSuccess: "Redirecting to Telegram to send request ✅",
                 tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", 
                 addToHome: "Add to Home Screen", addToHomeDesc: "For fast access and app-like experience", addToHomeBtn: "Add"
             }
@@ -265,7 +265,48 @@
         };
 
         window.setContactType = (type) => { state.contactType = type; renderApp(); };
-        window.submitForm = (e) => { e.preventDefault(); showToast(t('toastFormSuccess')); };
+        
+        // تعديل كود تقديم نموذج التواصل ليقوم بالتوجيه إلى التليجرام برسالة معدة مسبقاً
+        window.submitForm = (e) => { 
+            e.preventDefault(); 
+            
+            // سحب البيانات من الحقول
+            const name = document.getElementById('contactName').value;
+            const phoneVal = document.getElementById('contactPhone').value;
+            const phone = `+20${phoneVal}`; // دمج مفتاح الدولة مع الرقم
+            
+            const selectEl = document.getElementById('contactSelect');
+            const selectText = selectEl.options[selectEl.selectedIndex].text;
+            
+            // صياغة الرسالة بناءً على اللغة و نوع المستخدم
+            let message = "";
+            if (state.lang === 'ar') {
+                message = `مرحباً فريق سكنك، أود التواصل معكم:\n\n`;
+                message += `👤 الاسم: ${name}\n`;
+                message += `📱 رقم الهاتف: ${phone}\n`;
+                message += `🎯 أنا: ${state.contactType === 'tenant' ? 'مستأجر / يبحث عن سكن' : 'مؤجر / صاحب عقار'}\n`;
+                message += `📌 ${state.contactType === 'tenant' ? 'المرحلة المطلوبة' : 'صفتي'}: ${selectText}\n\n`;
+                message += `بانتظار ردكم، شكراً لكم.`;
+            } else {
+                message = `Hello Saknk Team, I would like to get in touch:\n\n`;
+                message += `👤 Name: ${name}\n`;
+                message += `📱 Phone: ${phone}\n`;
+                message += `🎯 I am a: ${state.contactType === 'tenant' ? 'Tenant / Looking for Housing' : 'Landlord / Property Owner'}\n`;
+                message += `📌 ${state.contactType === 'tenant' ? 'Desired Phase' : 'My Role'}: ${selectText}\n\n`;
+                message += `Looking forward to your reply, thanks.`;
+            }
+
+            // تجهيز رابط التليجرام (تشمل تشفير النص ليناسب الرابط)
+            const telegramUrl = `https://t.me/Saknk?text=${encodeURIComponent(message)}`;
+            
+            // فتح التليجرام في نافذة جديدة
+            window.open(telegramUrl, '_blank');
+            
+            // إظهار رسالة النجاح وتفريغ النموذج اختيارياً
+            showToast(t('toastFormSuccess')); 
+            e.target.reset();
+        };
+
         window.nextImage = (e, len) => { e.stopPropagation(); state.imageIndex = (state.imageIndex + 1) % len; renderApp(); };
         window.prevImage = (e, len) => { e.stopPropagation(); state.imageIndex = state.imageIndex === 0 ? len - 1 : state.imageIndex - 1; renderApp(); };
         window.setActivePin = (id) => { state.activePinId = state.activePinId === id ? null : id; renderApp(); };
@@ -560,18 +601,21 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <input type="text" required placeholder="${t('name')}" class="w-full p-4 rounded-xl border outline-none font-medium transition-all ${theme.inputBg}" />
+                            <!-- تمت إضافة ID لحقل الاسم -->
+                            <input type="text" id="contactName" required placeholder="${t('name')}" class="w-full p-4 rounded-xl border outline-none font-medium transition-all ${theme.inputBg}" />
                             <div class="flex items-center p-1.5 rounded-xl border transition-all ${theme.inputWrapperBg}">
                                 <div class="flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-2.5 rounded-lg shadow-sm" dir="ltr">
                                     <i data-lucide="message-circle" class="w-4 h-4 fill-white"></i><span class="font-bold text-sm">+20</span>
                                 </div>
-                                <input type="tel" required placeholder="${t('phone')}" class="flex-1 bg-transparent text-sm font-medium outline-none px-3" dir="ltr" />
+                                <!-- تمت إضافة ID لحقل التليفون -->
+                                <input type="tel" id="contactPhone" required placeholder="${t('phone')}" class="flex-1 bg-transparent text-sm font-medium outline-none px-3" dir="ltr" />
                             </div>
                             <div class="md:col-span-2">
-                                <select required class="w-full p-4 rounded-xl border outline-none font-medium transition-all appearance-none cursor-pointer ${theme.inputBg}">
+                                <!-- تمت إضافة ID لحقل القائمة المنسدلة -->
+                                <select id="contactSelect" required class="w-full p-4 rounded-xl border outline-none font-medium transition-all appearance-none cursor-pointer ${theme.inputBg}">
                                     <option value="" disabled selected hidden>${state.contactType === 'tenant' ? t('desiredPhase') : t('userType')}</option>
                                     ${state.contactType === 'tenant' 
-                                        ? `<option value="1">الأولى</option><option value="2">الثانية</option><option value="3">الثالثة</option><option value="4">الرابعة</option>` 
+                                        ? `<option value="1">المرحلة الأولى</option><option value="2">المرحلة الثانية</option><option value="3">المرحلة الثالثة</option><option value="4">المرحلة الرابعة</option>` 
                                         : `<option value="landlord">${t('landlord')}</option><option value="broker">${t('broker')}</option>`}
                                 </select>
                             </div>
@@ -851,7 +895,5 @@
     </script>
 </body>
 </html>
-
-
 
 
