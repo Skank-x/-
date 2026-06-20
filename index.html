@@ -14,8 +14,8 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- PWA Manifest Inline لإجبار المتصفح على التعرف على الموقع كتطبيق -->
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Saknk%22%2C%22short_name%22%3A%22Saknk%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23F0F3FA%22%2C%22theme_color%22%3A%22%23638ECB%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fi.postimg.cc%2FJ7XDkQcR%2F1000140986-removebg-preview.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+    <!-- PWA Manifest القياسي -->
+    <link rel="manifest" href="manifest.json">
 
     <style>
         body { 
@@ -179,34 +179,28 @@
         // --- PWA Installation Logic ---
         let deferredPrompt;
         
-        // إظهار نافذة التثبيت الأصلية للمتصفح (تعمل على أندرويد وكروم)
         window.addEventListener('beforeinstallprompt', (e) => {
-            // منع المتصفح من إظهار الإشعار بشكل تلقائي لنظهره نحن عند الضغط
             e.preventDefault();
             deferredPrompt = e;
         });
 
-        // إنشاء سيرفر ووركر وهمي ليوافق المتصفح على تثبيت الموقع كتطبيق
+        // استدعاء ملف service-worker.js بشكل قياسي وصحيح
         if ('serviceWorker' in navigator) {
-            const swCode = `
-                self.addEventListener('install', () => self.skipWaiting());
-                self.addEventListener('activate', () => self.clients.claim());
-                self.addEventListener('fetch', () => {});
-            `;
-            const blob = new Blob([swCode], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').catch((err) => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
         }
 
         window.installPWA = async () => {
             if (deferredPrompt) {
-                // إظهار واجهة المتصفح للتثبيت
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') {
                     deferredPrompt = null;
                 }
             } else {
-                // بديل لأنظمة iOS (الآيفون) التي لا تدعم الخاصية برمجياً
                 showToast(state.lang === 'ar' ? 'الرجاء الضغط على خيارات المتصفح (أو زر المشاركة) ثم "إضافة إلى الشاشة الرئيسية"' : 'Tap browser options (or Share icon) then "Add to Home Screen"');
             }
         };
@@ -290,7 +284,22 @@
             setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 4000);
         };
 
-        const formatMessage = (text) => text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+        // دالة حماية من الـ XSS عبر تنقية الرسائل وتحويل وسوم HTML
+        const escapeHTML = (str) => {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        };
+
+        // تطبيق دالة الحماية قبل تحويل النصوص المسموحة كـ (الخط العريض والأسطر الجديدة)
+        const formatMessage = (text) => {
+            const safeText = escapeHTML(text);
+            return safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+        };
 
         // --- Actions & Mutations ---
         window.toggleTheme = () => { state.isDark = !state.isDark; renderApp(); };
@@ -315,8 +324,9 @@
             renderApp();
         };
 
+        // تأمين stopPropagation
         window.toggleFav = (id, e) => {
-            if(e) e.stopPropagation();
+            if(e && typeof e.stopPropagation === 'function') e.stopPropagation();
             if(state.favorites.includes(id)) { state.favorites = state.favorites.filter(f => f !== id); showToast(t('toastFavRemove')); } 
             else { state.favorites.push(id); showToast(t('toastFavAdd')); }
             renderApp();
@@ -325,7 +335,7 @@
         window.setContactType = (type) => { state.contactType = type; renderApp(); };
         
         window.submitForm = (e) => { 
-            e.preventDefault(); 
+            if(e && typeof e.preventDefault === 'function') e.preventDefault(); 
             const name = document.getElementById('contactName').value;
             const phoneVal = document.getElementById('contactPhone').value;
             const phone = `+20${phoneVal}`;
@@ -355,8 +365,9 @@
             e.target.reset();
         };
 
-        window.nextImage = (e, len) => { e.stopPropagation(); state.imageIndex = (state.imageIndex + 1) % len; renderApp(); };
-        window.prevImage = (e, len) => { e.stopPropagation(); state.imageIndex = state.imageIndex === 0 ? len - 1 : state.imageIndex - 1; renderApp(); };
+        // تأمين stopPropagation
+        window.nextImage = (e, len) => { if(e && typeof e.stopPropagation === 'function') e.stopPropagation(); state.imageIndex = (state.imageIndex + 1) % len; renderApp(); };
+        window.prevImage = (e, len) => { if(e && typeof e.stopPropagation === 'function') e.stopPropagation(); state.imageIndex = state.imageIndex === 0 ? len - 1 : state.imageIndex - 1; renderApp(); };
         window.setActivePin = (id) => { state.activePinId = state.activePinId === id ? null : id; renderApp(); };
 
         // --- Chatbot Logic ---
@@ -378,7 +389,7 @@
         window.closeChat = () => { window.history.back(); }; 
         
         window.sendChatMessage = (e, textOverride) => {
-            if(e) e.preventDefault();
+            if(e && typeof e.preventDefault === 'function') e.preventDefault();
             const inputEl = document.getElementById('chatInputObj');
             const text = textOverride || (inputEl ? inputEl.value : '');
             if(!text.trim() || state.isBotTyping) return;
@@ -453,7 +464,7 @@
 
             const msgsHTML = state.chatMessages.map(msg => `
                 <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-up">
-                    <div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed prose ${msg.sender === 'user' ? `bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white rounded-tr-sm font-medium shadow-md` : `bg-[${C.cardDark}] text-white border border-white/10 rounded-tl-sm shadow-sm`}">
+                    <div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed prose break-words ${msg.sender === 'user' ? `bg-gradient-to-r from-[${C.primary}] to-[${C.darkBlue}] text-white rounded-tr-sm font-medium shadow-md` : `bg-[${C.cardDark}] text-white border border-white/10 rounded-tl-sm shadow-sm`}">
                         ${formatMessage(msg.text)}
                     </div>
                 </div>
@@ -561,7 +572,7 @@
                                 <img src="${p.images[0]}" loading="lazy" class="w-full h-20 object-cover rounded-lg mb-2">
                                 <p class="text-[10px] font-bold truncate ${theme.textMain} mb-1">${p.title[state.lang]}</p>
                                 <p class="text-sm font-black text-[${C.primary}]">${p.price} <span class="text-[10px] font-normal">${p.currency[state.lang]}</span></p>
-                                <button onclick="window.navigateToProperty(${p.id}); event.stopPropagation();" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">${state.lang === 'ar' ? 'التفاصيل' : 'Details'}</button>
+                                <button onclick="if(typeof event !== 'undefined' && event && typeof event.stopPropagation === 'function') event.stopPropagation(); window.navigateToProperty(${p.id});" class="mt-2 w-full bg-[${C.primary}] text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">${state.lang === 'ar' ? 'التفاصيل' : 'Details'}</button>
                             </div>
                         </div>
                     `).join('')}
@@ -903,7 +914,5 @@
     </script>
 </body>
 </html>
-
-
 
 
