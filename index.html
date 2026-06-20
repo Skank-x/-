@@ -143,7 +143,7 @@
                     name: "الاسم بالكامل", phone: "رقم الهاتف", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
                     userType: "صفتي", landlord: "مالك العقار", broker: "سمسار", send: "إرسال الطلب", favorites: "المفضلة",
                     noFavoritesTitle: "قائمتك فارغة", toastFavAdd: "تمت الإضافة للمفضلة 🤍", toastFavRemove: "تم الإزالة من المفضلة", 
-                    toastFormSuccess: "تم توجيهك للتليجرام ✅", formError: "يرجى تعبئة جميع الحقول", tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", share: "مشاركة", linkCopied: "تم نسخ الرابط!", loadMore: "عرض المزيد", loadError: "حدث خطأ أثناء تحميل العقارات"
+                    toastFormSuccess: "تم إرسال طلبك بنجاح ✅", formError: "يرجى تعبئة جميع الحقول", tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", share: "مشاركة", linkCopied: "تم نسخ الرابط!", loadMore: "عرض المزيد", loadError: "حدث خطأ أثناء تحميل العقارات"
                 },
                 en: {
                     appName: "Saknk", changeLang: "Change Language",
@@ -157,7 +157,7 @@
                     name: "Full Name", phone: "Phone Number", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
                     userType: "My Role", landlord: "Property Owner", broker: "Broker", send: "Submit Request", favorites: "Favorites",
                     noFavoritesTitle: "Your List is Empty", toastFavAdd: "Added to favorites 🤍", toastFavRemove: "Removed from favorites", 
-                    toastFormSuccess: "Redirecting to Telegram ✅", formError: "Please fill all fields", tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", share: "Share", linkCopied: "Link copied!", loadMore: "Load More", loadError: "Failed to load properties"
+                    toastFormSuccess: "Request sent successfully ✅", formError: "Please fill all fields", tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", share: "Share", linkCopied: "Link copied!", loadMore: "Load More", loadError: "Failed to load properties"
                 }
             };
 
@@ -317,7 +317,8 @@
                 }, 1000);
             };
 
-            const submitForm = (e) => { 
+            // التعديل الخاص بـ Formspree بدلاً من تيليجرام
+            const submitForm = async (e) => { 
                 e.preventDefault(); 
                 const name = document.getElementById('contactName').value.trim();
                 const phoneVal = document.getElementById('contactPhone').value.trim();
@@ -327,11 +328,34 @@
 
                 const selectText = selectEl.options[selectEl.selectedIndex].text;
                 const phone = `+20${phoneVal}`;
-                let message = state.lang === 'ar' ? `مرحباً سكنك:\nالاسم: ${name}\nالهاتف: ${phone}\nأنا: ${state.contactType === 'tenant' ? 'مستأجر' : 'مؤجر'}\nالاختيار: ${selectText}` : `Hello Saknk:\nName: ${name}\nPhone: ${phone}\nI am a: ${state.contactType === 'tenant' ? 'Tenant' : 'Landlord'}\nChoice: ${selectText}`;
+                const role = state.contactType === 'tenant' ? (state.lang === 'ar' ? 'مستأجر' : 'Tenant') : (state.lang === 'ar' ? 'مؤجر' : 'Landlord');
 
-                window.open(`https://t.me/Saknk?text=${encodeURIComponent(message)}`, '_blank');
-                showToast(t('toastFormSuccess')); 
-                e.target.reset();
+                const formData = {
+                    name: name,
+                    phone: phone,
+                    role: role,
+                    choice: selectText
+                };
+
+                try {
+                    const response = await fetch('https://formspree.io/f/xojoaejd', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        showToast(t('toastFormSuccess')); 
+                        e.target.reset();
+                    } else {
+                        showToast(state.lang === 'ar' ? 'حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً' : 'Error sending request, please try again', true);
+                    }
+                } catch (error) {
+                    showToast(state.lang === 'ar' ? 'حدث خطأ في الاتصال بالخادم' : 'Network error', true);
+                }
             };
 
             const updateHomeDynamicUI = () => {
