@@ -102,23 +102,8 @@
             <div class="absolute inset-0 bg-primary opacity-20 rounded-full animate-ping"></div>
             <img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="w-24 object-contain animate-bounce relative z-10">
         </div>
-        <h1 class="text-2xl font-black text-darkBlue dark:text-primary mb-2 text-center animate-fade-up">لم يتم انطلاق الموقع رسمياً 🚀</h1>
-        <p class="text-midBlue dark:text-softBlue text-sm text-center font-bold mb-8 animate-fade-up" style="animation-delay: 0.1s">نحن في المرحلة التجريبية حالياً</p>
-
-        <div class="w-full max-w-sm bg-white/80 dark:bg-cardDark/80 backdrop-blur-md border border-borderLight dark:border-white/10 p-4 rounded-[1.5rem] flex items-center gap-4 shadow-xl animate-fade-up" style="animation-delay: 0.2s">
-            <div class="bg-bgLight dark:bg-bgDark rounded-xl p-2.5 flex-shrink-0">
-                <img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" class="w-8 h-8 object-contain">
-            </div>
-            <div class="flex-1">
-                <p class="font-bold text-darkBlue dark:text-white leading-none mb-1.5 text-sm">أضف سكنك للشاشة</p>
-                <p class="text-[11px] text-midBlue dark:text-gray-400 leading-tight">للوصول السريع وتجربة التطبيق</p>
-            </div>
-            <button onclick="SaknkApp.installPWA()" class="bg-gradient-to-r from-primary to-darkBlue text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-all flex-shrink-0">إضافة</button>
-        </div>
-
-        <button onclick="SaknkApp.closeSplash()" aria-label="الدخول للنسخة التجريبية" class="mt-8 px-6 py-3 rounded-full border-2 border-borderLight dark:border-primary/50 text-darkBlue dark:text-white font-bold text-sm hover:bg-borderLight/50 dark:hover:bg-primary/20 active:scale-95 transition-all animate-fade-up" style="animation-delay: 0.3s">
-            الدخول للنسخة التجريبية
-        </button>
+        <h1 class="text-2xl font-black text-darkBlue dark:text-primary mb-2 text-center animate-fade-up">جاري تحميل العقارات... 🚀</h1>
+        <p class="text-midBlue dark:text-softBlue text-sm text-center font-bold mb-8 animate-fade-up" style="animation-delay: 0.1s">سكنك المثالي في انتظارك</p>
     </div>
 
     <!-- الـ Container الأساسي للتطبيق -->
@@ -166,13 +151,8 @@
                 }
             };
 
-            const properties = [
-                { id: 1, title: { ar: "شقة مودرن فاخرة مفروشة بالكامل", en: "Modern fully furnished apartment" }, location: { ar: "ديمو الجديدة، المرحلة الأولى", en: "New Demo, First Phase" }, price: "25,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: "6,250", beds: 2, baths: 1, area: 85, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 2, total: 4 }, demoLocation: "newDemo", phase: "phase1", featured: true, images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Diamond Luxury", verified: true, rate: 4.9 }, features: { ar: ["واي فاي", "تكييف", "غسالة", "مطبخ", "جيم"], en: ["Wi-Fi", "AC", "Washing", "Kitchen", "Gym"] }, trustBadges: { ar: ["شامل الفواتير", "بدون عمولة"], en: ["Bills Included", "No Commission"] }, pois: [{ icon: 'graduation-cap', ar: "الجامعة (2 كم)", en: "University (2 km)", time: "5 min" }], mapCoords: { top: '35%', left: '45%' } },
-                { id: 2, title: { ar: "شقة 100 متر 2 غرف الترا سوبر لوكس", en: "100 SQM 2-Bedroom Ultra Super Lux" }, location: { ar: "ديمو القديمة، القاهرة", en: "Old Demo, Cairo" }, price: "47,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: "23,500", beds: 2, baths: 2, area: 100, type: { ar: "شقة", en: "Apartment" }, gender: "female", occupancy: { current: 1, total: 2 }, demoLocation: "oldDemo", phase: null, featured: false, images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "TruBroker™", verified: true, rate: 4.7 }, features: { ar: ["تكييف", "مطبخ", "حديقة", "أمن"], en: ["AC", "Kitchen", "Garden", "Security"] }, trustBadges: { ar: ["أمن 24 ساعة", "موثق"], en: ["24/7 Security", "Verified"] }, pois: [{ icon: 'graduation-cap', ar: "الجامعة (5 كم)", en: "University (5 km)", time: "15 min" }], mapCoords: { top: '55%', left: '70%' } },
-                { id: 3, title: { ar: "شقة (سمارت هوم) مفروشة بالكامل", en: "Smart Home Fully Furnished" }, location: { ar: "ديمو الجديدة، المرحلة الثانية", en: "New Demo, Second Phase" }, price: "100,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: null, beds: 3, baths: 3, area: 200, type: { ar: "شقة", en: "Apartment" }, gender: "family", occupancy: null, demoLocation: "newDemo", phase: "phase2", featured: true, images: ["https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Elite Homes", verified: true, rate: 5.0 }, features: { ar: ["واي فاي", "تكييف مركزي", "غسالة"], en: ["Wi-Fi", "Central AC", "Washing"] }, trustBadges: { ar: ["صيانة مجانية", "سمارت هوم"], en: ["Free Maint.", "Smart Home"] }, pois: [{ icon: 'shopping-cart', ar: "مول (1.5 كم)", en: "Mall (1.5 km)", time: "4 min" }], mapCoords: { top: '40%', left: '25%' } },
-                { id: 4, title: { ar: "فيلا مستقلة بحمام سباحة وحديقة", en: "Standalone Villa with Pool" }, location: { ar: "ديمو الجديدة، المرحلة الثالثة", en: "New Demo, Third Phase" }, price: "15,000,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: null, beds: 4, baths: 3, area: 450, type: { ar: "فيلا", en: "Villa" }, gender: "family", occupancy: null, demoLocation: "newDemo", phase: "phase3", featured: true, images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Ajwar Real", verified: true, rate: 4.8 }, features: { ar: ["موقف", "حديقة", "أمن"], en: ["Parking", "Garden", "Security"] }, trustBadges: { ar: ["مطور معتمد", "تشطيب فاخر"], en: ["Certified", "Luxury"] }, pois: [{ icon: 'tree-pine', ar: "حديقة (200 م)", en: "Park (200 m)", time: "2 min" }], mapCoords: { top: '70%', left: '50%' } },
-                { id: 5, title: { ar: "شقة ستوديو شبابي بموقع حيوي", en: "Youth Studio in Prime Location" }, location: { ar: "ديمو الجديدة، المرحلة الرابعة", en: "New Demo, Fourth Phase" }, price: "18,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: "4,500", beds: 1, baths: 1, area: 65, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 3, total: 4 }, demoLocation: "newDemo", phase: "phase4", featured: false, images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Future Homes", verified: true, rate: 4.6 }, features: { ar: ["واي فاي", "أمن", "غسالة"], en: ["Wi-Fi", "Security", "Washing"] }, trustBadges: { ar: ["بدون تأمين", "قريب من المواصلات"], en: ["No Deposit", "Near Transit"] }, pois: [{ icon: 'bus', ar: "مواصلات (50 م)", en: "Transit (50 m)", time: "1 min" }], mapCoords: { top: '20%', left: '60%' } }
-            ];
+            // الـ Array بقى فاضي وهنستدعيه من ملف JSON
+            let properties = [];
 
             // --- State & Setup ---
             const loadSavedPrefs = () => { try { return JSON.parse(localStorage.getItem('saknk_prefs')) || {}; } catch(e){ return {}; } };
@@ -344,7 +324,6 @@
                 e.target.reset();
             };
 
-            // الدالة السحرية لتحديث الفلاتر والعقارات معاً بدون ريفرش
             const updateHomeDynamicUI = () => {
                 const filtersArea = document.getElementById('home-filters-area');
                 const titleArea = document.getElementById('home-title-area');
@@ -365,7 +344,7 @@
 
             const toggleShowFavs = () => { 
                 state.showFavorites = !state.showFavorites; 
-                fullRenderBody(); // نستخدم الريفرش الكامل للصفحة هنا لتحديث الهيدر وإخفاء النموذج السفلي
+                fullRenderBody(); 
             };
 
             const toggleLang = () => { state.lang = state.lang === 'ar' ? 'en' : 'ar'; savePrefs(); fullRenderBody(); };
@@ -762,7 +741,11 @@
             };
 
             const fullRender = () => {
-                document.getElementById('app-footer').innerHTML = `<footer dir="ltr" class="w-full pt-8 pb-6 mt-auto border-t flex flex-col items-center justify-center gap-2 relative z-10 bg-bgLight dark:bg-bgDark border-borderLight dark:border-white/5"><img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="h-8 w-auto"><p class="text-sm text-darkBlue/70 dark:text-softBlue">All rights reserved to <span class="font-bold text-primary mx-1">Saknk</span> &copy; ${new Date().getFullYear()}</p></footer>`;
+                // اضافة اسم المطور هنا وبتتغير مع اللغة
+                const devText = state.lang === 'ar' ? 'تم التطوير بواسطة <span class="font-bold">ELNENX</span>' : 'Developed by <span class="font-bold">ELNENX</span>';
+                
+                document.getElementById('app-footer').innerHTML = `<footer dir="ltr" class="w-full pt-8 pb-6 mt-auto border-t flex flex-col items-center justify-center gap-2 relative z-10 bg-bgLight dark:bg-bgDark border-borderLight dark:border-white/5"><img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="h-8 w-auto"><p class="text-sm text-darkBlue/70 dark:text-softBlue">All rights reserved to <span class="font-bold text-primary mx-1">Saknk</span> &copy; ${new Date().getFullYear()}</p><p class="text-xs text-darkBlue/70 dark:text-softBlue">${devText}</p></footer>`;
+                
                 document.getElementById('ambient-bg').innerHTML = `<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none"><div class="absolute top-[0%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[600px] h-[300px] rounded-full blur-[80px] opacity-40 bg-midBlue dark:bg-primary" style="animation: float 10s ease-in-out infinite"></div><div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-30 bg-primary dark:bg-darkBlue" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div></div>`;
                 renderChatbot();
                 fullRenderBody();
@@ -784,13 +767,27 @@
                 fullRenderBody();
             });
 
-            const init = () => {
+            // تعديل دالة init لتقوم بجلب البيانات من ملف JSON
+            const init = async () => {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('service-worker.js').catch(()=>{});
                 }
+                
+                try {
+                    // جلب البيانات من ملف properties.json
+                    const response = await fetch('properties.json');
+                    properties = await response.json();
+                } catch (error) {
+                    console.error("خطأ في تحميل العقارات:", error);
+                    properties = []; // في حالة حدوث خطأ
+                }
+
                 const params = new URLSearchParams(window.location.search);
                 const id = params.get('id');
                 if(id && properties.find(p => p.id === parseInt(id))) state.selectedPropertyId = parseInt(id);
+                
+                // نقوم بإنهاء شاشة التحميل بعد جلب البيانات
+                closeSplash();
                 fullRender();
                 setTimeout(() => { document.getElementById('app').style.opacity = '1'; }, 100);
             };
@@ -807,7 +804,3 @@
     </script>
 </body>
 </html>
-
-
-
-
