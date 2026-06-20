@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سكنك | Saknk</title>
+    <meta name="description" content="منصتك الأولى لإيجاد سكنك المثالي أو عرض عقارك بأسهل الطرق.">
+    <meta name="theme-color" content="#638ECB">
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#638ECB',
+                        darkBlue: '#395886',
+                        midBlue: '#8AAEE0',
+                        softBlue: '#B1C9EF',
+                        bgLight: '#F0F3FA',
+                        borderLight: '#D5DEEF',
+                        bgDark: '#0b1221',
+                        cardDark: '#152033',
+                        textMutedLight: '#5A7AAB',
+                        textMutedDark: '#8AAEE0'
+                    },
+                    fontFamily: {
+                        tajawal: ['Tajawal', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Tajawal', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes float {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(0, -20px, 0) scale(1.05); }
+        }
+        @keyframes fadeUpStagger {
+          from { opacity: 0; transform: translate3d(0, 20px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        .animate-fade-up {
+          animation: fadeUpStagger 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes pinBounce {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, -10px, 0); }
+        }
+        .pin-bounce { animation: pinBounce 2s infinite; }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, rgba(200,200,200,0.1) 25%, rgba(200,200,200,0.2) 37%, rgba(200,200,200,0.1) 63%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 37%, rgba(255,255,255,0.05) 63%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        
+        .fade-out { opacity: 0; transform: translate3d(-50%, -20px, 0) !important; transition: all 0.3s ease-out; }
+        
+        #splash-screen { transition: opacity 0.6s ease-out, visibility 0.6s ease-out; }
+        #splash-screen.hidden-splash { opacity: 0; visibility: hidden; pointer-events: none; }
+        
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 3px; background: #638ECB; z-index: 99999;
+            transition: width 0.3s ease, opacity 0.3s ease; width: 0%; opacity: 0;
+        }
+
+        *:focus-visible { outline: 2px solid #638ECB; outline-offset: 2px; }
+        .card-exit { transform: scale(0.9); opacity: 0; transition: all 0.3s ease; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-bgLight text-gray-900 dark:bg-bgDark dark:text-gray-100 transition-colors duration-300 min-h-screen flex flex-col m-0 p-0">
+
+    <div id="progress-bar"></div>
+
+    <div id="splash-screen" class="fixed inset-0 z-[9999] bg-bgLight dark:bg-bgDark flex items-center justify-center flex-col px-6">
+        <div class="relative w-32 h-32 flex items-center justify-center mb-6">
+            <div class="absolute inset-0 bg-primary opacity-20 rounded-full animate-ping"></div>
+            <img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="w-24 object-contain animate-bounce relative z-10">
+        </div>
+        <h1 class="text-2xl font-black text-darkBlue dark:text-primary mb-2 text-center animate-fade-up">لم يتم انطلاق الموقع رسمياً 🚀</h1>
+        <p class="text-midBlue dark:text-softBlue text-sm text-center font-bold mb-8 animate-fade-up" style="animation-delay: 0.1s">نحن في المرحلة التجريبية حالياً</p>
+
+        <div class="w-full max-w-sm bg-white/80 dark:bg-cardDark/80 backdrop-blur-md border border-borderLight dark:border-white/10 p-4 rounded-[1.5rem] flex items-center gap-4 shadow-xl animate-fade-up" style="animation-delay: 0.2s">
+            <div class="bg-bgLight dark:bg-bgDark rounded-xl p-2.5 flex-shrink-0">
+                <img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" class="w-8 h-8 object-contain">
+            </div>
+            <div class="flex-1">
+                <p class="font-bold text-darkBlue dark:text-white leading-none mb-1.5 text-sm">أضف سكنك للشاشة</p>
+                <p class="text-[11px] text-midBlue dark:text-gray-400 leading-tight">للوصول السريع وتجربة التطبيق</p>
+            </div>
+            <button onclick="SaknkApp.installPWA()" class="bg-gradient-to-r from-primary to-darkBlue text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-all flex-shrink-0">إضافة</button>
+        </div>
+
+        <button onclick="SaknkApp.closeSplash()" aria-label="الدخول للنسخة التجريبية" class="mt-8 px-6 py-3 rounded-full border-2 border-borderLight dark:border-primary/50 text-darkBlue dark:text-white font-bold text-sm hover:bg-borderLight/50 dark:hover:bg-primary/20 active:scale-95 transition-all animate-fade-up" style="animation-delay: 0.3s">
+            الدخول للنسخة التجريبية
+        </button>
+    </div>
+
+    <div id="app" class="flex-1 flex flex-col w-full opacity-0 transition-opacity duration-700">
+        <div id="ambient-bg"></div>
+        <div id="app-header"></div>
+        <div id="app-body" class="flex-1 flex flex-col w-full"></div>
+        <div id="app-footer"></div>
+        <div id="app-chatbot"></div>
+    </div>
+
+    <script>
+        window.SaknkApp = (function() {
+            const FALLBACK_IMG = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
+
+            // --- Data & Translations ---
+            const translations = {
+                ar: {
+                    appName: "سكنك", changeLang: "تغيير اللغة",
+                    newDemo: "ديمو الجديدة", oldDemo: "ديمو القديمة", newDemoTitle: "عقارات ديمو الجديدة", oldDemoTitle: "عقارات ديمو القديمة",
+                    choosePhase: "اختر المرحلة", all: "الكل", phase1: "الأولى", phase2: "الثانية", phase3: "الثالثة", phase4: "الرابعة",
+                    featured: "مميز", beds: "غرف", baths: "حمامات", area: "متر",
+                    ref: "رقم مرجعي", location: "الموقع", amenities: "المرافق", verifiedAgent: "وكيل معتمد", propertyDetails: "تفاصيل العقار",
+                    neighborhood: "الأماكن القريبة", description: "اكتشف الفخامة في هذا العقار الرائع المصمم لتلبية أرقى معايير الحياة العصرية.",
+                    recommended: "عقارات مميزة", whatsapp: "واتساب", callNow: "إتصل الآن", gender_male: "سكن طلاب", gender_female: "سكن طالبات",
+                    gender_family: "سكن عائلات", occupants: "أفراد", contactUs: "تواصل معنا", contactDesc: "نحن هنا لمساعدتك في إيجاد سكنك المثالي.",
+                    name: "الاسم بالكامل", phone: "رقم الهاتف", iAm: "أنا...", tenant: "مستأجر / طالب", owner: "مؤجر / صاحب عقار", desiredPhase: "المرحلة المطلوبة",
+                    userType: "صفتي", landlord: "مالك العقار", broker: "سمسار", send: "إرسال الطلب", favorites: "المفضلة",
+                    noFavoritesTitle: "قائمتك فارغة", toastFavAdd: "تمت الإضافة للمفضلة 🤍", toastFavRemove: "تم الإزالة من المفضلة", 
+                    toastFormSuccess: "تم توجيهك للتليجرام ✅", formError: "يرجى تعبئة جميع الحقول", tour360: "جولة 360°", availableBed: "متاح سرير بـ", perPerson: "للفرد", share: "مشاركة", linkCopied: "تم نسخ الرابط!", loadMore: "عرض المزيد"
+                },
+                en: {
+                    appName: "Saknk", changeLang: "Change Language",
+                    newDemo: "New Demo", oldDemo: "Old Demo", newDemoTitle: "New Demo Properties", oldDemoTitle: "Old Demo Properties",
+                    choosePhase: "Choose Phase", all: "All", phase1: "First", phase2: "Second", phase3: "Third", phase4: "Fourth",
+                    featured: "Featured", beds: "Beds", baths: "Baths", area: "SQM",
+                    ref: "Ref", location: "Location", amenities: "Amenities", verifiedAgent: "Verified Agent", propertyDetails: "Property Details",
+                    neighborhood: "Neighborhood", description: "Discover luxury in this exquisite property.",
+                    recommended: "Featured Properties", whatsapp: "WhatsApp", callNow: "Call Now", gender_male: "Male Students", gender_female: "Female Students",
+                    gender_family: "Families", occupants: "Persons", contactUs: "Contact Us", contactDesc: "We are here to help you find your perfect home.",
+                    name: "Full Name", phone: "Phone Number", iAm: "I am a...", tenant: "Tenant / Student", owner: "Landlord", desiredPhase: "Desired Phase",
+                    userType: "My Role", landlord: "Property Owner", broker: "Broker", send: "Submit Request", favorites: "Favorites",
+                    noFavoritesTitle: "Your List is Empty", toastFavAdd: "Added to favorites 🤍", toastFavRemove: "Removed from favorites", 
+                    toastFormSuccess: "Redirecting to Telegram ✅", formError: "Please fill all fields", tour360: "360° Tour", availableBed: "Bed available for", perPerson: "per person", share: "Share", linkCopied: "Link copied!", loadMore: "Load More"
+                }
+            };
+
+            const properties = [
+                { id: 1, title: { ar: "شقة مودرن فاخرة مفروشة بالكامل", en: "Modern fully furnished apartment" }, location: { ar: "ديمو الجديدة، المرحلة الأولى", en: "New Demo, First Phase" }, price: "25,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: "6,250", beds: 2, baths: 1, area: 85, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 2, total: 4 }, demoLocation: "newDemo", phase: "phase1", featured: true, images: ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Diamond Luxury", verified: true, rate: 4.9 }, features: { ar: ["واي فاي", "تكييف", "غسالة", "مطبخ", "جيم"], en: ["Wi-Fi", "AC", "Washing", "Kitchen", "Gym"] }, trustBadges: { ar: ["شامل الفواتير", "بدون عمولة"], en: ["Bills Included", "No Commission"] }, pois: [{ icon: 'graduation-cap', ar: "الجامعة (2 كم)", en: "University (2 km)", time: "5 min" }], mapCoords: { top: '35%', left: '45%' } },
+                { id: 2, title: { ar: "شقة 100 متر 2 غرف الترا سوبر لوكس", en: "100 SQM 2-Bedroom Ultra Super Lux" }, location: { ar: "ديمو القديمة، القاهرة", en: "Old Demo, Cairo" }, price: "47,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: "23,500", beds: 2, baths: 2, area: 100, type: { ar: "شقة", en: "Apartment" }, gender: "female", occupancy: { current: 1, total: 2 }, demoLocation: "oldDemo", phase: null, featured: false, images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "TruBroker™", verified: true, rate: 4.7 }, features: { ar: ["تكييف", "مطبخ", "حديقة", "أمن"], en: ["AC", "Kitchen", "Garden", "Security"] }, trustBadges: { ar: ["أمن 24 ساعة", "موثق"], en: ["24/7 Security", "Verified"] }, pois: [{ icon: 'graduation-cap', ar: "الجامعة (5 كم)", en: "University (5 km)", time: "15 min" }], mapCoords: { top: '55%', left: '70%' } },
+                { id: 3, title: { ar: "شقة (سمارت هوم) مفروشة بالكامل", en: "Smart Home Fully Furnished" }, location: { ar: "ديمو الجديدة، المرحلة الثانية", en: "New Demo, Second Phase" }, price: "100,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: null, beds: 3, baths: 3, area: 200, type: { ar: "شقة", en: "Apartment" }, gender: "family", occupancy: null, demoLocation: "newDemo", phase: "phase2", featured: true, images: ["https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Elite Homes", verified: true, rate: 5.0 }, features: { ar: ["واي فاي", "تكييف مركزي", "غسالة"], en: ["Wi-Fi", "Central AC", "Washing"] }, trustBadges: { ar: ["صيانة مجانية", "سمارت هوم"], en: ["Free Maint.", "Smart Home"] }, pois: [{ icon: 'shopping-cart', ar: "مول (1.5 كم)", en: "Mall (1.5 km)", time: "4 min" }], mapCoords: { top: '40%', left: '25%' } },
+                { id: 4, title: { ar: "فيلا مستقلة بحمام سباحة وحديقة", en: "Standalone Villa with Pool" }, location: { ar: "ديمو الجديدة، المرحلة الثالثة", en: "New Demo, Third Phase" }, price: "15,000,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: null, beds: 4, baths: 3, area: 450, type: { ar: "فيلا", en: "Villa" }, gender: "family", occupancy: null, demoLocation: "newDemo", phase: "phase3", featured: true, images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Ajwar Real", verified: true, rate: 4.8 }, features: { ar: ["موقف", "حديقة", "أمن"], en: ["Parking", "Garden", "Security"] }, trustBadges: { ar: ["مطور معتمد", "تشطيب فاخر"], en: ["Certified", "Luxury"] }, pois: [{ icon: 'tree-pine', ar: "حديقة (200 م)", en: "Park (200 m)", time: "2 min" }], mapCoords: { top: '70%', left: '50%' } },
+                { id: 5, title: { ar: "شقة ستوديو شبابي بموقع حيوي", en: "Youth Studio in Prime Location" }, location: { ar: "ديمو الجديدة، المرحلة الرابعة", en: "New Demo, Fourth Phase" }, price: "18,000", currency: { ar: "ج.م", en: "EGP" }, pricePerPerson: "4,500", beds: 1, baths: 1, area: 65, type: { ar: "شقة", en: "Apartment" }, gender: "male", occupancy: { current: 3, total: 4 }, demoLocation: "newDemo", phase: "phase4", featured: false, images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"], agent: { name: "Future Homes", verified: true, rate: 4.6 }, features: { ar: ["واي فاي", "أمن", "غسالة"], en: ["Wi-Fi", "Security", "Washing"] }, trustBadges: { ar: ["بدون تأمين", "قريب من المواصلات"], en: ["No Deposit", "Near Transit"] }, pois: [{ icon: 'bus', ar: "مواصلات (50 م)", en: "Transit (50 m)", time: "1 min" }], mapCoords: { top: '20%', left: '60%' } }
+            ];
+
+            // --- State & Setup ---
+            const loadSavedPrefs = () => { try { return JSON.parse(localStorage.getItem('saknk_prefs')) || {}; } catch(e){ return {}; } };
+            let savedPrefs = loadSavedPrefs();
+            
+            let state = {
+                isDark: savedPrefs.isDark || false, lang: savedPrefs.lang || 'ar',
+                activeLocation: 'newDemo', activePhase: 'all', viewMode: 'grid', 
+                showFavorites: false, favorites: savedPrefs.favorites || [],
+                selectedPropertyId: null, activePinId: null,
+                contactType: 'tenant', imageIndex: 0, itemsToShow: 6
+            };
+            
+            let chatState = { isOpen: false, messages: [], isTyping: false };
+            let dockObserver = null;
+            let deferredPrompt;
+
+            window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+
+            const savePrefs = () => { localStorage.setItem('saknk_prefs', JSON.stringify({ isDark: state.isDark, lang: state.lang, favorites: state.favorites })); };
+            const escapeHTML = (str) => str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+            const t = (key) => translations[state.lang][key] || key;
+            const getFeatureIcon = (f) => { const l=f.toLowerCase(); return l.includes('واي')||l.includes('wi')?'wifi':l.includes('تكييف')||l.includes('ac')?'wind':l.includes('غسالة')||l.includes('washing')?'shirt':l.includes('مطبخ')||l.includes('kitchen')?'utensils':l.includes('جيم')||l.includes('gym')?'dumbbell':l.includes('سيارات')||l.includes('parking')?'car-front':l.includes('أمن')||l.includes('security')?'shield':l.includes('حديقة')||l.includes('garden')?'tree-pine':'check-circle-2'; };
+            const getPinColor = (ph) => ({ phase1:'#EF4444', phase2:'#3B82F6', phase3:'#10B981', phase4:'#F59E0B' }[ph] || '#638ECB');
+
+            const showToast = (msg, isError = false) => {
+                document.getElementById('app-toast')?.remove();
+                const toast = document.createElement('div');
+                toast.id = 'app-toast';
+                toast.className = `fixed top-24 left-1/2 -translate-x-1/2 z-[200] ${isError ? 'bg-red-500 text-white border-red-600' : 'bg-white dark:bg-cardDark text-gray-900 dark:text-white border-primary/50'} border px-6 py-3.5 rounded-2xl font-bold shadow-2xl animate-in slide-in-from-top-10 duration-300 flex items-center gap-2 whitespace-nowrap`;
+                toast.innerHTML = escapeHTML(msg);
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3500);
+            };
+
+            const showProgress = () => {
+                const bar = document.getElementById('progress-bar');
+                if(!bar) return;
+                bar.style.opacity = '1'; bar.style.width = '30%';
+                setTimeout(() => bar.style.width = '70%', 100);
+                setTimeout(() => { bar.style.width = '100%'; setTimeout(() => { bar.style.opacity = '0'; setTimeout(() => bar.style.width = '0%', 300); }, 300); }, 300);
+            };
+
+            const updateMeta = () => {
+                document.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+                document.documentElement.lang = state.lang;
+                if (state.isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+                const p = properties.find(prop => prop.id === state.selectedPropertyId);
+                document.title = p ? `${p.title[state.lang]} | ${t('appName')}` : `${t('appName')} | Saknk`;
+            };
+
+
+            // --- ACTIONS (NO REFRESH) ---
+
+            const toggleTheme = () => {
+                state.isDark = !state.isDark;
+                savePrefs();
+                updateMeta();
+                const themeIcon = document.getElementById('theme-icon');
+                if(themeIcon) { themeIcon.setAttribute('data-lucide', state.isDark ? 'sun' : 'moon'); lucide.createIcons(); }
+            };
+
+            const toggleFav = (id, e) => {
+                if(e) { e.preventDefault(); e.stopPropagation(); }
+                const isFav = state.favorites.includes(id);
+
+                if(isFav) {
+                    state.favorites = state.favorites.filter(f => f !== id);
+                    showToast(t('toastFavRemove'));
+                } else {
+                    state.favorites.push(id);
+                    showToast(t('toastFavAdd'));
+                }
+                savePrefs();
+                
+                const newIsFav = !isFav;
+                const cardBtn = document.getElementById(`fav-btn-card-${id}`);
+                const cardIcon = document.getElementById(`fav-icon-card-${id}`);
+                if(cardBtn && cardIcon) {
+                    cardBtn.className = `absolute top-4 ${state.lang === 'ar' ? 'left-4' : 'right-4'} p-2.5 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-all active:scale-90 ${newIsFav ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-black/40 border border-white/10'}`;
+                    cardIcon.className = `w-4 h-4 ${newIsFav ? 'fill-red-500 animate-in zoom-in duration-300' : ''}`;
+                }
+
+                const detailBtn = document.getElementById(`fav-btn-detail-${id}`);
+                const detailIcon = document.getElementById(`fav-icon-detail-${id}`);
+                if(detailBtn && detailIcon) {
+                    detailBtn.className = `w-12 h-12 backdrop-blur-xl border rounded-2xl flex items-center justify-center transition shadow-lg active:scale-95 outline-none focus-visible:ring-2 focus-visible:ring-white ${newIsFav ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'bg-black/40 border-white/10 text-white hover:bg-white hover:text-red-500'}`;
+                    detailIcon.className = `w-5 h-5 ${newIsFav ? 'fill-red-500 animate-in zoom-in duration-300' : ''}`;
+                }
+
+                const headerFavIndicator = document.getElementById('header-fav-indicator');
+                if(headerFavIndicator) {
+                    headerFavIndicator.innerHTML = state.favorites.length > 0 && !state.showFavorites ? `<span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white dark:border-cardDark rounded-full"></span>` : '';
+                }
+
+                if(state.showFavorites && !state.selectedPropertyId && !newIsFav) {
+                    const cardElement = document.getElementById(`prop-card-container-${id}`);
+                    if(cardElement) {
+                        cardElement.classList.add('card-exit');
+                        setTimeout(() => {
+                            cardElement.remove();
+                            if(state.favorites.length === 0) document.getElementById('dynamic-properties-area').innerHTML = renderEmptyState();
+                        }, 300);
+                    }
+                }
+            };
+
+            const setContactType = (type) => { 
+                state.contactType = type; 
+                const container = document.getElementById('contact-form-container');
+                if(container) { container.innerHTML = getContactFormHTML(); lucide.createIcons(); }
+            };
+
+            const toggleChat = () => { 
+                chatState.isOpen = !chatState.isOpen; 
+                if(chatState.isOpen && chatState.messages.length === 0) {
+                    chatState.messages = [{ sender: 'ai', text: state.lang === 'ar' ? 'أهلاً بك في سكنك! 🤖 كيف يمكنني مساعدتك؟' : 'Welcome! 🤖 How can I help?' }];
+                }
+                renderChatbot(); 
+            };
+            
+            const sendChatMessage = (e) => {
+                if(e) e.preventDefault();
+                const inputEl = document.getElementById('chatInputObj');
+                if(!inputEl) return;
+                const rawText = inputEl.value;
+                if(!rawText.trim() || chatState.isTyping) return;
+                
+                const text = escapeHTML(rawText);
+                chatState.messages.push({ sender: 'user', text });
+                chatState.isTyping = true;
+                inputEl.value = ''; 
+                
+                const chatContainer = document.getElementById('chat-messages');
+                chatContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-end animate-fade-up"><div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed bg-gradient-to-r from-primary to-darkBlue text-white rounded-tr-sm font-medium shadow-md">${text}</div></div>`);
+                chatContainer.insertAdjacentHTML('beforeend', `<div id="bot-typing-indicator" class="flex justify-start animate-fade-up"><div class="bg-gray-100 dark:bg-cardDark text-gray-500 dark:text-gray-300 text-sm p-3.5 rounded-2xl rounded-tl-sm flex items-center gap-2"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-primary"></i></div></div>`);
+                lucide.createIcons();
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                setTimeout(() => {
+                    let query = text.toLowerCase();
+                    let reply = state.lang === 'ar' ? 'سأقوم بتحويل طلبك لأحد وكلائنا 🏡' : 'I will forward your request 🏡';
+                    if (query.includes('طالب') || query.includes('student')) reply = state.lang === 'ar' ? 'لدينا خيارات ممتازة لسكن الطلاب!' : 'We have great options for students!';
+                    
+                    chatState.isTyping = false;
+                    chatState.messages.push({ sender: 'ai', text: reply });
+                    
+                    document.getElementById('bot-typing-indicator')?.remove();
+                    chatContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-start animate-fade-up"><div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed bg-gray-100 dark:bg-cardDark text-gray-800 dark:text-white border border-gray-200 dark:border-white/10 rounded-tl-sm shadow-sm">${reply}</div></div>`);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 1000);
+            };
+
+            const submitForm = (e) => { 
+                e.preventDefault(); 
+                const name = document.getElementById('contactName').value.trim();
+                const phoneVal = document.getElementById('contactPhone').value.trim();
+                const selectEl = document.getElementById('contactSelect');
+                const selectVal = selectEl.value;
+                if(!name || !phoneVal || !selectVal) return showToast(t('formError'), true);
+
+                const selectText = selectEl.options[selectEl.selectedIndex].text;
+                const phone = `+20${phoneVal}`;
+                let message = state.lang === 'ar' ? `مرحباً سكنك:\nالاسم: ${name}\nالهاتف: ${phone}\nأنا: ${state.contactType === 'tenant' ? 'مستأجر' : 'مؤجر'}\nالاختيار: ${selectText}` : `Hello Saknk:\nName: ${name}\nPhone: ${phone}\nI am a: ${state.contactType === 'tenant' ? 'Tenant' : 'Landlord'}\nChoice: ${selectText}`;
+
+                window.open(`https://t.me/Saknk?text=${encodeURIComponent(message)}`, '_blank');
+                showToast(t('toastFormSuccess')); 
+                e.target.reset();
+            };
+
+            // الدالة السحرية لتحديث الفلاتر والعقارات معاً بدون ريفرش
+            const updateHomeDynamicUI = () => {
+                const filtersArea = document.getElementById('home-filters-area');
+                const titleArea = document.getElementById('home-title-area');
+                const gridArea = document.getElementById('dynamic-properties-area');
+                
+                if(filtersArea) filtersArea.innerHTML = getFiltersHTML();
+                if(titleArea) titleArea.innerHTML = getTitleHTML();
+                if(gridArea) gridArea.innerHTML = getPropertiesContentHTML();
+                
+                lucide.createIcons();
+            };
+
+            const setLocation = (loc) => { state.activeLocation = loc; if(loc !== 'newDemo') state.activePhase = 'all'; updateHomeDynamicUI(); };
+            const setPhase = (phase) => { state.activePhase = phase; updateHomeDynamicUI(); };
+            const setViewMode = (mode) => { state.viewMode = mode; updateHomeDynamicUI(); };
+            const setActivePin = (id) => { state.activePinId = state.activePinId === id ? null : id; updateHomeDynamicUI(); };
+            const loadMore = () => { state.itemsToShow += 6; updateHomeDynamicUI(); };
+
+            const toggleShowFavs = () => { 
+                state.showFavorites = !state.showFavorites; 
+                fullRenderBody(); // نستخدم الريفرش الكامل للصفحة هنا لتحديث الهيدر وإخفاء النموذج السفلي
+            };
+
+            const toggleLang = () => { state.lang = state.lang === 'ar' ? 'en' : 'ar'; savePrefs(); fullRenderBody(); };
+
+            const navigateToProperty = (id, e) => {
+                if(e) e.stopPropagation();
+                state.selectedPropertyId = id;
+                state.imageIndex = 0;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const url = new URL(window.location);
+                url.searchParams.set('id', id);
+                window.history.pushState({ ...state }, '', url);
+                fullRenderBody();
+            };
+
+            const navigateHome = () => {
+                state.selectedPropertyId = null;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const url = new URL(window.location);
+                url.searchParams.delete('id');
+                window.history.pushState({ ...state }, '', url);
+                fullRenderBody();
+            };
+
+            const shareProp = async (id, titleText) => {
+                const url = window.location.href;
+                if (navigator.share) {
+                    try { await navigator.share({ title: titleText, url: url }); } catch (err) {}
+                } else {
+                    navigator.clipboard.writeText(url);
+                    showToast(t('linkCopied'));
+                }
+            };
+
+            const nextImage = (e, len) => { if(e) e.stopPropagation(); state.imageIndex = (state.imageIndex + 1) % len; updatePropertyImage(); };
+            const prevImage = (e, len) => { if(e) e.stopPropagation(); state.imageIndex = state.imageIndex === 0 ? len - 1 : state.imageIndex - 1; updatePropertyImage(); };
+            
+            const updatePropertyImage = () => {
+                const p = properties.find(prop => prop.id === state.selectedPropertyId);
+                const imgEl = document.getElementById('main-prop-image');
+                const counterEl = document.getElementById('prop-image-counter');
+                if(imgEl && p) imgEl.src = p.images[state.imageIndex];
+                if(counterEl && p) counterEl.innerHTML = `<i data-lucide="camera" class="w-3.5 h-3.5"></i> ${state.imageIndex + 1} / ${p.images.length}`;
+                lucide.createIcons();
+            };
+
+            const installPWA = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') deferredPrompt = null;
+                } else {
+                    showToast(state.lang === 'ar' ? 'الرجاء الإضافة من خيارات المتصفح' : 'Please use browser options to add to home screen');
+                }
+            };
+
+            // --- HTML GENERATORS ---
+
+            const getHeaderHTML = () => `
+                <header class="fixed top-4 left-4 right-4 z-40 max-w-7xl mx-auto animate-fade-up pointer-events-none">
+                    <div class="border bg-white/60 dark:bg-cardDark/60 backdrop-blur-xl border-white/50 dark:border-white/10 rounded-[1.5rem] px-5 py-3 flex justify-between items-center shadow-sm pointer-events-auto">
+                        <button onclick="SaknkApp.navigateHome()" aria-label="الرئيسية" class="flex items-center gap-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg">
+                            <img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="h-10 w-auto object-contain">
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="SaknkApp.toggleLang()" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm bg-borderLight/50 dark:bg-darkBlue/30 hover:bg-softBlue/50 dark:hover:bg-darkBlue/50 transition-colors hover:scale-105 active:scale-95">${state.lang === 'ar' ? 'EN' : 'AR'}</button>
+                            <button onclick="SaknkApp.toggleTheme()" class="w-10 h-10 rounded-xl flex items-center justify-center bg-borderLight/50 dark:bg-darkBlue/30 hover:bg-softBlue/50 dark:hover:bg-darkBlue/50 transition-colors hover:scale-105 active:scale-95"><i id="theme-icon" data-lucide="${state.isDark ? 'sun' : 'moon'}" class="text-darkBlue dark:text-softBlue w-5 h-5"></i></button>
+                            <button id="header-fav-main-btn" onclick="SaknkApp.toggleShowFavs()" class="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${state.showFavorites ? 'bg-red-500/10 border border-red-500/30' : 'bg-borderLight/50 dark:bg-darkBlue/30 hover:bg-softBlue/50 dark:hover:bg-darkBlue/50'}">
+                                <i id="header-fav-main-icon" data-lucide="heart" class="w-5 h-5 ${state.showFavorites ? 'text-red-500 fill-red-500' : 'text-darkBlue dark:text-white'}"></i>
+                                <span id="header-fav-indicator">${state.favorites.length > 0 && !state.showFavorites ? `<span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border border-white dark:border-cardDark rounded-full"></span>` : ''}</span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+            `;
+
+            const getFiltersHTML = () => {
+                if (state.showFavorites) return '';
+                return `
+                <div class="transition-all duration-300 w-full animate-fade-up">
+                    <div class="border bg-white/60 dark:bg-cardDark/60 backdrop-blur-xl border-white/50 dark:border-white/10 rounded-[1.5rem] p-1.5 flex items-center justify-between shadow-sm">
+                        <div class="flex w-full relative">
+                            <div class="absolute inset-y-0 w-1/2 bg-primary rounded-xl transition-all duration-300 ease-out shadow-md ${state.activeLocation === 'newDemo' ? (state.lang === 'ar' ? 'right-0' : 'left-0') : (state.lang === 'ar' ? 'right-1/2' : 'left-1/2')}"></div>
+                            <button onclick="SaknkApp.setLocation('newDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'newDemo' ? 'text-white' : 'text-textMutedLight dark:text-textMutedDark hover:text-gray-900 dark:hover:text-white'}">${t('newDemo')}</button>
+                            <button onclick="SaknkApp.setLocation('oldDemo')" class="relative z-10 flex-1 py-2.5 text-sm font-bold rounded-xl transition-colors duration-300 ${state.activeLocation === 'oldDemo' ? 'text-white' : 'text-textMutedLight dark:text-textMutedDark hover:text-gray-900 dark:hover:text-white'}">${t('oldDemo')}</button>
+                        </div>
+                        <div class="w-[1px] h-6 mx-2 bg-black/10 dark:bg-white/10"></div>
+                        <div class="flex bg-white/50 dark:bg-black/20 p-1 rounded-xl ml-1 border border-borderLight dark:border-white/5">
+                            <button onclick="SaknkApp.setViewMode('grid')" class="p-1.5 rounded-lg transition-colors ${state.viewMode==='grid' ? 'bg-primary text-white shadow-md' : 'text-textMutedLight dark:text-textMutedDark'}"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                            <button onclick="SaknkApp.setViewMode('map')" class="p-1.5 rounded-lg transition-colors ${state.viewMode==='map' ? 'bg-primary text-white shadow-md' : 'text-textMutedLight dark:text-textMutedDark'}"><i data-lucide="map" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    ${state.activeLocation === 'newDemo' ? `
+                    <div class="mt-4 border bg-white/60 dark:bg-cardDark/60 backdrop-blur-xl border-white/50 dark:border-white/10 rounded-[1.2rem] p-1.5 flex items-center gap-1 overflow-x-auto hide-scrollbar snap-x shadow-sm">
+                        <span class="text-xs font-bold whitespace-nowrap px-3 text-textMutedLight dark:text-textMutedDark">${t('choosePhase')}:</span>
+                        <div class="flex gap-1">
+                            ${[{id:'all',l:t('all')}, {id:'phase1',l:t('phase1')}, {id:'phase2',l:t('phase2')}, {id:'phase3',l:t('phase3')}, {id:'phase4',l:t('phase4')}].map(ph => `
+                                <button onclick="SaknkApp.setPhase('${ph.id}')" class="whitespace-nowrap snap-center px-4 py-2 text-sm font-bold rounded-xl transition-all duration-300 ${state.activePhase === ph.id ? 'bg-primary/20 border border-primary/50 text-primary shadow-inner scale-100' : 'bg-transparent border-transparent text-textMutedLight dark:text-textMutedDark hover:text-gray-900 dark:hover:text-white hover:scale-105'}">${ph.l}</button>
+                            `).join('')}
+                        </div>
+                    </div>` : ''}
+                </div>`;
+            };
+
+            const getTitleHTML = () => `
+                <h2 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">${state.showFavorites ? t('favorites') : (state.activeLocation === 'newDemo' ? t('newDemoTitle') : t('oldDemoTitle'))}</h2>
+            `;
+
+            const getContactFormHTML = () => `
+                <div class="bg-white border-borderLight text-gray-900 dark:bg-cardDark/80 dark:border-darkBlue/30 dark:text-white border rounded-[2rem] p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-fade-up w-full mt-6 transition-all">
+                    <div class="absolute top-0 ${state.lang === 'ar' ? 'right-0' : 'left-0'} w-40 h-40 bg-primary/10 rounded-full blur-[60px] pointer-events-none"></div>
+                    <h3 class="text-2xl font-black mb-2 relative z-10">${t('contactUs')}</h3>
+                    <p class="text-sm mb-6 relative z-10 text-textMutedLight dark:text-textMutedDark">${t('contactDesc')}</p>
+                    <form class="space-y-5 relative z-10" onsubmit="SaknkApp.submitForm(event)">
+                        <div>
+                            <label class="block text-sm font-bold mb-3">${t('iAm')}</label>
+                            <div class="flex gap-3">
+                                <button type="button" onclick="SaknkApp.setContactType('tenant')" class="flex-1 py-3.5 text-sm font-bold rounded-xl border transition-all ${state.contactType === 'tenant' ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30 scale-[1.02]' : 'bg-white border-borderLight dark:bg-bgDark/50 dark:border-white/10 text-textMutedLight dark:text-textMutedDark hover:text-gray-900 dark:hover:text-white'}">${t('tenant')}</button>
+                                <button type="button" onclick="SaknkApp.setContactType('owner')" class="flex-1 py-3.5 text-sm font-bold rounded-xl border transition-all ${state.contactType === 'owner' ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30 scale-[1.02]' : 'bg-white border-borderLight dark:bg-bgDark/50 dark:border-white/10 text-textMutedLight dark:text-textMutedDark hover:text-gray-900 dark:hover:text-white'}">${t('owner')}</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in duration-300">
+                            <input type="text" id="contactName" required placeholder="${t('name')}" class="w-full p-4 rounded-xl border outline-none font-medium transition-all bg-white border-borderLight text-gray-900 focus:border-primary dark:bg-bgDark/50 dark:border-darkBlue/50 dark:text-white dark:focus:border-primary" />
+                            <div class="flex items-center p-1.5 rounded-xl border transition-all bg-white border-borderLight text-gray-900 focus-within:border-primary dark:bg-bgDark/50 dark:border-darkBlue/50 dark:text-white dark:focus-within:border-primary">
+                                <div class="flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-2.5 rounded-lg shadow-sm" dir="ltr"><i data-lucide="message-circle" class="w-4 h-4 fill-white"></i><span class="font-bold text-sm">+20</span></div>
+                                <input type="tel" id="contactPhone" required placeholder="${t('phone')}" class="flex-1 bg-transparent text-sm font-medium outline-none px-3 w-full" dir="ltr" pattern="[0-9]{10,11}" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <select id="contactSelect" required class="w-full p-4 rounded-xl border outline-none font-medium transition-all appearance-none cursor-pointer bg-white border-borderLight text-gray-900 focus:border-primary dark:bg-bgDark/50 dark:border-darkBlue/50 dark:text-white dark:focus:border-primary">
+                                    <option value="" disabled selected hidden>${state.contactType === 'tenant' ? t('desiredPhase') : t('userType')}</option>
+                                    ${state.contactType === 'tenant' ? `<option value="1">${t('phase1')}</option><option value="2">${t('phase2')}</option><option value="3">${t('phase3')}</option><option value="4">${t('phase4')}</option>` : `<option value="landlord">${t('landlord')}</option><option value="broker">${t('broker')}</option>`}
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-primary to-darkBlue text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-[0.98] transition-all shadow-[0_8px_30px_rgba(99,142,203,0.3)] mt-2">${t('send')}</button>
+                    </form>
+                </div>
+            `;
+
+            const renderEmptyState = () => `
+                <div class="col-span-full py-20 flex flex-col items-center justify-center text-center animate-fade-up">
+                    <div class="w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center mb-6"><i data-lucide="search-x" class="w-16 h-16 text-primary opacity-80"></i></div>
+                    <h3 class="text-2xl font-black mb-2 text-darkBlue dark:text-white">${state.showFavorites ? t('noFavoritesTitle') : (state.lang === 'ar' ? 'لا توجد عقارات مطابقة' : 'No properties found')}</h3>
+                </div>
+            `;
+
+            const getPropertiesContentHTML = () => {
+                let displayed = properties.filter(p => {
+                    if (state.showFavorites) return state.favorites.includes(p.id);
+                    return (p.demoLocation === state.activeLocation) && (state.activeLocation === 'newDemo' ? (state.activePhase === 'all' || p.phase === state.activePhase) : true);
+                });
+                const hasMore = displayed.length > state.itemsToShow;
+                displayed = displayed.slice(0, state.itemsToShow);
+
+                if (state.viewMode === 'map') {
+                    return `
+                    <div class="w-full h-[65vh] rounded-[2rem] border border-borderLight dark:border-white/10 relative overflow-hidden shadow-2xl animate-fade-up skeleton">
+                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" onload="this.parentElement.classList.remove('skeleton'); this.classList.add('opacity-70', 'dark:opacity-40')" onerror="this.onerror=null;this.src='${FALLBACK_IMG}';" class="w-full h-full object-cover opacity-0 mix-blend-overlay transition-opacity duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-bgLight/50 dark:from-bgDark/80 via-transparent"></div>
+                        ${displayed.map(p => `
+                            <div class="absolute w-10 h-10 -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-10" style="top: ${p.mapCoords.top}; left: ${p.mapCoords.left};" onclick="SaknkApp.setActivePin(${p.id})">
+                                <div class="relative flex items-center justify-center ${state.activePinId === p.id ? 'scale-125' : 'pin-bounce'} transition-transform"><div class="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg relative z-10 border-2 border-white" style="background-color: ${getPinColor(p.phase)}"><i data-lucide="map-pin" class="w-4 h-4"></i></div></div>
+                                <div class="absolute top-12 left-1/2 -translate-x-1/2 w-48 bg-white/90 dark:bg-cardDark/90 backdrop-blur-xl border border-borderLight dark:border-white/10 rounded-xl p-2 shadow-2xl transition-all duration-300 origin-top pointer-events-none ${state.activePinId === p.id ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">
+                                    <div class="skeleton h-20 w-full rounded-lg mb-2"><img src="${p.images[0]}" onload="this.parentElement.classList.remove('skeleton')" class="w-full h-full object-cover rounded-lg"></div>
+                                    <p class="text-[10px] font-bold truncate text-gray-900 dark:text-white mb-1">${p.title[state.lang]}</p>
+                                    <p class="text-sm font-black text-primary">${p.price} <span class="text-[10px] font-normal">${p.currency[state.lang]}</span></p>
+                                    <button onclick="SaknkApp.navigateToProperty(${p.id}, event)" class="mt-2 w-full bg-primary text-white text-xs font-bold py-1.5 rounded-lg pointer-events-auto">${state.lang === 'ar' ? 'التفاصيل' : 'Details'}</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>`;
+                }
+
+                const cardsHTML = displayed.length === 0 ? renderEmptyState() : displayed.map(p => {
+                    const isFav = state.favorites.includes(p.id);
+                    return `
+                    <div id="prop-card-container-${p.id}" class="animate-fade-up group relative bg-white dark:bg-cardDark/80 border border-borderLight dark:border-darkBlue/30 shadow-xl rounded-[2rem] overflow-hidden transition-all duration-300 hover:-translate-y-2 cursor-pointer self-start" onclick="SaknkApp.navigateToProperty(${p.id}, event)">
+                        <div class="relative h-60 overflow-hidden m-2 rounded-t-[1.5rem] rounded-b-xl z-10 skeleton">
+                            <img src="${p.images[0]}" loading="lazy" decoding="async" onload="this.parentElement.classList.remove('skeleton'); this.classList.add('opacity-100')" onerror="this.onerror=null;this.src='${FALLBACK_IMG}';" class="w-full h-full object-cover opacity-0 transition-all duration-700 group-hover:scale-110" />
+                            <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90"></div>
+                            ${p.featured ? `<div class="absolute top-4 ${state.lang === 'ar' ? 'right-4' : 'left-4'} bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg backdrop-blur-md">${t('featured')}</div>` : ''}
+                            
+                            <button id="fav-btn-card-${p.id}" data-fav-btn="${p.id}" class="absolute top-4 ${state.lang === 'ar' ? 'left-4' : 'right-4'} p-2.5 backdrop-blur-md rounded-xl text-white hover:bg-white/20 transition-all active:scale-90 ${isFav ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-black/40 border border-white/10'}" onclick="SaknkApp.toggleFav(${p.id}, event)">
+                                <i id="fav-icon-card-${p.id}" data-fav-icon="${p.id}" data-lucide="heart" class="w-4 h-4 ${isFav ? 'fill-red-500 animate-in zoom-in duration-300' : ''}"></i>
+                            </button>
+
+                            <div class="absolute bottom-4 right-4 left-4 flex flex-col">
+                                <h3 class="text-white text-2xl font-black drop-shadow-lg">${p.price} <span class="text-sm font-medium text-gray-300">${p.currency[state.lang]}</span></h3>
+                                ${p.pricePerPerson ? `<span class="text-xs font-bold text-[#25D366] bg-black/50 backdrop-blur-md px-2 py-1 rounded-md mt-1 border border-[#25D366]/20 w-fit">${t('availableBed')} ${p.pricePerPerson} ${t('perPerson')}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="p-5 pt-3">
+                            <h4 class="text-base font-bold mb-3 line-clamp-2 leading-relaxed text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">${p.title[state.lang]}</h4>
+                            <div class="flex flex-wrap items-center gap-2 mb-4">
+                                <div class="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-bold border bg-gray-50 border-borderLight text-darkBlue dark:bg-white/5 dark:border-white/5 dark:text-gray-300"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-primary"></i><span>${p.location[state.lang]}</span></div>
+                                <div class="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-bold border bg-gray-50 border-borderLight text-darkBlue dark:bg-white/5 dark:border-white/5 dark:text-gray-300"><i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-primary"></i><span>${p.gender === 'male' ? t('gender_male') : p.gender === 'female' ? t('gender_female') : t('gender_family')}</span></div>
+                            </div>
+                            <div class="flex items-center gap-4 py-4 mb-2 rounded-2xl px-4 justify-around border bg-gray-50 border-borderLight dark:bg-bgDark/60 dark:border-white/5">
+                                <div class="flex flex-col items-center gap-1"><i data-lucide="bed" class="w-4 h-4 text-primary"></i><span class="text-sm font-bold text-gray-900 dark:text-gray-100">${p.beds}</span></div>
+                                <div class="w-[1px] h-8 bg-borderLight dark:bg-white/10"></div>
+                                <div class="flex flex-col items-center gap-1"><i data-lucide="bath" class="w-4 h-4 text-primary"></i><span class="text-sm font-bold text-gray-900 dark:text-gray-100">${p.baths}</span></div>
+                                <div class="w-[1px] h-8 bg-borderLight dark:bg-white/10"></div>
+                                <div class="flex flex-col items-center gap-1"><i data-lucide="maximize" class="w-4 h-4 text-primary"></i><span class="text-sm font-bold text-gray-900 dark:text-gray-100">${p.area} ${state.lang === 'ar' ? 'م²' : 'm²'}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+
+                return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">${cardsHTML}</div>
+                        ${hasMore ? `<div class="col-span-full flex justify-center mt-6"><button onclick="SaknkApp.loadMore()" class="bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white px-8 py-3 rounded-xl font-bold transition-colors">${t('loadMore')}</button></div>` : ''}`;
+            };
+
+            const getHomeHTML = () => `
+                <main class="flex-1 px-4 pt-[104px] pb-12 flex flex-col gap-6 relative z-10 max-w-7xl mx-auto w-full">
+                    <div id="home-filters-area" class="w-full">${getFiltersHTML()}</div>
+                    <div id="home-title-area" class="flex justify-between items-end px-2 mt-2">${getTitleHTML()}</div>
+                    <div id="dynamic-properties-area">${getPropertiesContentHTML()}</div>
+                    ${!state.showFavorites ? `<div id="contact-form-container">${getContactFormHTML()}</div>` : ''}
+                </main>
+            `;
+
+            const getPropertyDetailsHTML = () => {
+                const p = properties.find(prop => prop.id === state.selectedPropertyId);
+                if(!p) return '';
+                const isFav = state.favorites.includes(p.id);
+                const genderLabel = p.gender === 'male' ? t('gender_male') : p.gender === 'female' ? t('gender_female') : t('gender_family');
+                const suggestedProps = properties.filter(sp => sp.id !== state.selectedPropertyId && sp.featured).slice(0, 3);
+                
+                return `
+                <div class="relative h-[60vh] sm:h-[65vh] w-full rounded-b-[3rem] overflow-hidden shadow-2xl shrink-0 z-10 animate-fade-up bg-bgDark skeleton" id="prop-img-container">
+                    <img id="main-prop-image" src="${p.images[state.imageIndex]}" onload="document.getElementById('prop-img-container').classList.remove('skeleton')" onerror="this.onerror=null;this.src='${FALLBACK_IMG}';" class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-bgLight dark:to-bgDark"></div>
+                    
+                    ${p.images.length > 1 ? `
+                        <button onclick="SaknkApp.prevImage(event, ${p.images.length})" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-primary transition-colors z-20"><i data-lucide="chevron-left"></i></button>
+                        <button onclick="SaknkApp.nextImage(event, ${p.images.length})" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-primary transition-colors z-20"><i data-lucide="chevron-right"></i></button>
+                        <div id="prop-image-counter" class="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1 z-20"><i data-lucide="camera" class="w-3.5 h-3.5"></i> ${state.imageIndex + 1} / ${p.images.length}</div>
+                    ` : ''}
+
+                    <div class="absolute top-6 left-6 right-6 flex justify-between items-center z-20 pt-4">
+                        <button onclick="SaknkApp.navigateHome()" class="w-12 h-12 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-105 active:scale-95 transition shadow-lg"><i data-lucide="${state.lang === 'ar' ? 'arrow-right' : 'arrow-left'}" class="w-5 h-5"></i></button>
+                        <div class="flex gap-2 sm:gap-3">
+                            <button onclick="SaknkApp.shareProp(${p.id}, '${p.title[state.lang]}')" class="w-12 h-12 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-primary transition shadow-lg"><i data-lucide="share-2" class="w-5 h-5"></i></button>
+                            <button id="fav-btn-detail-${p.id}" onclick="SaknkApp.toggleFav(${p.id}, event)" class="w-12 h-12 backdrop-blur-xl border rounded-2xl flex items-center justify-center transition shadow-lg active:scale-95 ${isFav ? 'bg-red-500/20 border-red-500/30 text-red-500' : 'bg-black/40 border-white/10 text-white hover:bg-white hover:text-red-500'}"><i id="fav-icon-detail-${p.id}" data-lucide="heart" class="w-5 h-5 ${isFav ? 'fill-red-500 animate-in zoom-in duration-300' : ''}"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <main class="px-4 sm:px-6 -mt-16 relative z-20 flex-1 flex flex-col gap-6 max-w-4xl mx-auto w-full pb-12">
+                    <div class="bg-white dark:bg-cardDark/80 border border-borderLight dark:border-darkBlue/30 shadow-xl rounded-[2rem] p-6 animate-fade-up w-full">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="inline-block bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-xl mb-3 shadow-[0_4px_15px_rgba(99,142,203,0.3)]">${p.type[state.lang]} • ${p.demoLocation === 'newDemo' ? t('newDemo') : t('oldDemo')}</span>
+                                <h1 class="text-3xl font-black mb-1 leading-tight text-gray-900 dark:text-white">${p.price} <span class="text-lg font-medium text-textMutedLight dark:text-textMutedDark">${p.currency[state.lang]}</span></h1>
+                                ${p.pricePerPerson ? `<div class="inline-flex items-center gap-1.5 text-xs font-bold text-[#25D366] bg-[#25D366]/10 px-2.5 py-1 rounded-md mb-2"><i data-lucide="check" class="w-3.5 h-3.5"></i> ${t('availableBed')} ${p.pricePerPerson} ${t('perPerson')}</div>` : ''}
+                            </div>
+                            <div class="p-2.5 rounded-xl border bg-gray-100 border-gray-200 dark:bg-black/50 dark:border-white/5"><span class="font-mono text-xs font-bold text-primary">#${t('ref')}-${p.id}42</span></div>
+                        </div>
+                        <h2 class="text-xl font-bold leading-relaxed mb-4 text-gray-900 dark:text-white">${p.title[state.lang]}</h2>
+                        <div class="flex flex-wrap gap-2 mb-5 pb-5 border-b border-gray-200 dark:border-gray-500/20">${p.trustBadges[state.lang].map(badge => `<span class="text-xs font-bold px-3 py-1.5 rounded-lg border bg-softBlue/30 border-softBlue text-darkBlue dark:bg-darkBlue/30 dark:border-darkBlue/50 dark:text-softBlue">${badge}</span>`).join('')}</div>
+                        <div class="flex flex-wrap items-center gap-3 mb-5">
+                            <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-primary/10 border-primary/20 text-gray-800 dark:bg-black/40 dark:border-primary/30 dark:text-gray-200"><i data-lucide="graduation-cap" class="w-4 h-4 text-primary"></i><span class="text-sm font-bold">${genderLabel}</span></div>
+                            ${p.occupancy ? `<div class="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-primary/10 border-primary/20 text-gray-800 dark:bg-black/40 dark:border-primary/30 dark:text-gray-200"><i data-lucide="users" class="w-4 h-4 text-primary"></i><span class="text-sm font-bold"><span class="text-primary">${p.occupancy.current}</span> / ${p.occupancy.total} ${t('occupants')}</span></div>` : ''}
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="flex flex-col items-center justify-center border py-4 rounded-2xl bg-gray-50 border-borderLight dark:bg-black/40 dark:border-white/5"><i data-lucide="bed" class="w-5 h-5 text-primary mb-2"></i><span class="text-xl font-bold text-gray-900 dark:text-white">${p.beds}</span><span class="text-[11px] uppercase tracking-wide mt-1 text-textMutedLight dark:text-textMutedDark">${t('beds')}</span></div>
+                            <div class="flex flex-col items-center justify-center border py-4 rounded-2xl bg-gray-50 border-borderLight dark:bg-black/40 dark:border-white/5"><i data-lucide="bath" class="w-5 h-5 text-primary mb-2"></i><span class="text-xl font-bold text-gray-900 dark:text-white">${p.baths}</span><span class="text-[11px] uppercase tracking-wide mt-1 text-textMutedLight dark:text-textMutedDark">${t('baths')}</span></div>
+                            <div class="flex flex-col items-center justify-center border py-4 rounded-2xl bg-gray-50 border-borderLight dark:bg-black/40 dark:border-white/5"><i data-lucide="maximize" class="w-5 h-5 text-primary mb-2"></i><span class="text-xl font-bold text-gray-900 dark:text-white">${p.area}</span><span class="text-[11px] uppercase tracking-wide mt-1 text-textMutedLight dark:text-textMutedDark">${t('area')}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="animate-fade-up w-full">
+                        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">${t('neighborhood')}</h3>
+                        <div class="rounded-[2rem] border overflow-hidden bg-white dark:bg-cardDark border-borderLight dark:border-darkBlue/30 shadow-sm">
+                            <div class="relative h-48 w-full bg-bgDark">
+                                <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" loading="lazy" class="w-full h-full object-cover opacity-50 mix-blend-overlay" />
+                                <div class="absolute inset-0 flex items-center justify-center"><div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center animate-pulse"><div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg"><i data-lucide="map-pin" class="w-4 h-4 text-white"></i></div></div></div>
+                            </div>
+                            <div class="p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    ${p.pois ? p.pois.map(poi => `
+                                        <div class="flex items-center justify-between p-3 rounded-xl border bg-gray-50 border-gray-100 dark:bg-black/30 dark:border-white/5"><div class="flex items-center gap-3"><div class="p-2 rounded-lg bg-white shadow-sm dark:bg-white/5 dark:shadow-none"><i data-lucide="${poi.icon}" class="w-4 h-4 text-primary"></i></div><span class="text-sm font-bold text-gray-900 dark:text-white">${poi[state.lang]}</span></div><span class="text-xs font-bold px-2 py-1 rounded-md bg-softBlue text-darkBlue dark:bg-white/5 dark:text-primary">${poi.time}</span></div>
+                                    `).join('') : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="animate-fade-up w-full">
+                        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">${t('amenities')}</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            ${p.features[state.lang].map(f => `<div class="flex flex-col items-center justify-center p-4 rounded-2xl border bg-white dark:bg-cardDark border-borderLight dark:border-darkBlue/30 shadow-sm"><i data-lucide="${getFeatureIcon(f)}" class="w-5 h-5 text-primary mb-2"></i><span class="text-sm font-bold text-gray-900 dark:text-white text-center">${f}</span></div>`).join('')}
+                        </div>
+                    </div>
+
+                    <div id="dock-target" class="w-full h-8 mt-2"></div>
+                    <div id="dock-content" class="fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto z-50 transition-all duration-300">
+                        <div class="bg-white/80 dark:bg-cardDark/80 backdrop-blur-xl border border-white/50 dark:border-white/10 p-2.5 rounded-3xl flex gap-2 shadow-2xl">
+                            <button onclick="window.open('https://wa.me/201000000000', '_blank')" class="flex-1 bg-[#25D366] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all"><i data-lucide="message-circle" class="w-5 h-5"></i><span>${t('whatsapp')}</span></button>
+                            <button onclick="window.open('tel:+201000000000', '_self')" class="flex-1 bg-gradient-to-r from-primary to-darkBlue text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all"><i data-lucide="phone" class="w-5 h-5"></i><span>${t('callNow')}</span></button>
+                        </div>
+                    </div>
+
+                    <div class="animate-fade-up w-full relative z-20 mt-2">
+                        <div class="border rounded-2xl p-5 flex items-center justify-between shadow-sm bg-white border-borderLight dark:bg-gradient-to-r dark:from-cardDark dark:to-bgDark dark:border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-black rounded-full flex items-center justify-center border-2 border-primary p-1 relative"><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.agent.name)}&background=152033&color=638ECB" class="w-full h-full rounded-full" /></div>
+                                <div><div class="flex items-center gap-1.5 mb-1"><h4 class="font-bold text-base text-gray-900 dark:text-white">${p.agent.name}</h4>${p.agent.verified ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-[#10B981]"></i>' : ''}</div><div class="flex items-center gap-1 text-xs font-medium text-textMutedLight dark:text-textMutedDark"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-primary"></i><span>${t('verifiedAgent')}</span></div></div>
+                            </div>
+                            <div class="p-2 rounded-xl text-center border bg-gray-50 border-borderLight dark:bg-white/5 dark:border-white/5"><span class="flex items-center gap-1 text-sm font-bold text-gray-900 dark:text-white"><i data-lucide="star" class="w-3 h-3 text-yellow-500 fill-yellow-500"></i> ${p.agent.rate}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="animate-fade-up w-full mt-4">
+                        <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">${t('propertyDetails')}</h3>
+                        <p class="text-sm leading-loose text-textMutedLight dark:text-textMutedDark">${t('description')}</p>
+                    </div>
+
+                    ${suggestedProps.length > 0 ? `
+                        <div class="border-t pt-8 border-borderLight dark:border-white/10 animate-fade-up w-full mt-6">
+                            <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">${t('recommended')}</h3>
+                            <div class="flex overflow-x-auto gap-4 pb-6 snap-x hide-scrollbar">
+                                ${suggestedProps.map(sProp => `
+                                    <div onclick="SaknkApp.navigateToProperty(${sProp.id}, event)" class="min-w-[280px] w-[280px] snap-center rounded-[2rem] overflow-hidden border bg-white border-borderLight dark:bg-cardDark/80 dark:border-darkBlue/30 hover:-translate-y-2 transition-transform cursor-pointer shadow-sm">
+                                        <div class="h-40 relative"><img src="${sProp.images[0]}" loading="lazy" class="w-full h-full object-cover" /><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div><div class="absolute top-3 right-3"><span class="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-lg">${t('featured')}</span></div><div class="absolute bottom-3 left-4 right-4"><h4 class="font-bold text-white text-lg">${sProp.price} <span class="text-xs font-normal text-gray-300">${sProp.currency[state.lang]}</span></h4></div></div>
+                                        <div class="p-4 pt-3"><p class="text-sm font-bold truncate mb-3 text-gray-900 dark:text-white">${sProp.title[state.lang]}</p><div class="flex items-center gap-2 text-xs pt-3 border-t font-bold border-gray-100 text-darkBlue dark:border-white/10 dark:text-gray-300"><i data-lucide="bed" class="w-3.5 h-3.5 text-primary"></i> ${sProp.beds} <i data-lucide="bath" class="w-3.5 h-3.5 text-primary ${state.lang === 'ar' ? 'mr-2' : 'ml-2'}"></i> ${sProp.baths} <i data-lucide="maximize" class="w-3.5 h-3.5 text-primary ${state.lang === 'ar' ? 'mr-2' : 'ml-2'}"></i> ${sProp.area} ${state.lang === 'ar' ? 'م²' : 'm²'}</div></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </main>
+                `;
+            };
+
+            const renderChatbot = () => {
+                const container = document.getElementById('app-chatbot');
+                if(!container) return;
+                if(!chatState.isOpen) {
+                    container.innerHTML = `<div class="fixed bottom-6 right-6 z-[150] animate-fade-up"><button onclick="SaknkApp.toggleChat()" class="w-14 h-14 rounded-full bg-darkBlue flex items-center justify-center text-white shadow-[0_8px_30px_rgba(57,88,134,0.4)] hover:scale-110 active:scale-95 transition-all"><i data-lucide="bot" class="w-7 h-7"></i><span class="absolute top-0 right-0 w-3.5 h-3.5 bg-primary border-2 border-bgLight dark:border-bgDark rounded-full animate-ping"></span></button></div>`;
+                } else {
+                    container.innerHTML = `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6" dir="${state.lang === 'ar' ? 'rtl' : 'ltr'}">
+                        <div class="absolute inset-0 bg-black/60 backdrop-blur-md animate-fade-up cursor-pointer" onclick="SaknkApp.toggleChat()"></div>
+                        <div class="relative w-full max-w-[360px] h-[680px] max-h-[85vh] bg-white dark:bg-bgDark rounded-[3rem] border-[6px] border-primary shadow-[0_0_60px_rgba(99,142,203,0.3)] flex flex-col overflow-hidden animate-fade-up">
+                            <div class="pt-8 pb-4 px-5 flex items-center justify-between bg-gray-50 dark:bg-cardDark border-b border-borderLight dark:border-white/10 z-40 relative"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg relative"><i data-lucide="sparkles" class="w-5 h-5"></i><div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-cardDark rounded-full"></div></div><div><h3 class="text-gray-900 dark:text-white font-bold text-sm">Saknk AI ✨</h3><p class="text-primary dark:text-softBlue text-xs font-bold">Online</p></div></div><button onclick="SaknkApp.toggleChat()" class="w-8 h-8 bg-gray-200 dark:bg-white/10 rounded-full flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-white/20 transition active:scale-95"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+                            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-white dark:bg-bgDark hide-scrollbar">
+                                ${chatState.messages.map(msg => `<div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-up"><div class="max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user' ? `bg-gradient-to-r from-primary to-darkBlue text-white rounded-tr-sm font-medium shadow-md` : `bg-gray-100 dark:bg-cardDark text-gray-800 dark:text-white border border-gray-200 dark:border-white/10 rounded-tl-sm shadow-sm`}">${msg.text}</div></div>`).join('')}
+                                ${chatState.isTyping ? `<div id="bot-typing-indicator" class="flex justify-start animate-fade-up"><div class="bg-gray-100 dark:bg-cardDark text-gray-500 dark:text-gray-300 text-sm p-3.5 rounded-2xl rounded-tl-sm flex items-center gap-2"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-primary"></i></div></div>` : ''}
+                            </div>
+                            <div class="p-4 bg-gray-50 dark:bg-cardDark border-t border-borderLight dark:border-white/10 z-40">
+                                <form onsubmit="SaknkApp.sendChatMessage(event)" class="flex gap-2 relative">
+                                    <input type="text" id="chatInputObj" placeholder="${state.lang === 'ar' ? 'اكتب رسالتك...' : 'Type message...'}" class="flex-1 bg-white dark:bg-black/50 text-gray-900 dark:text-white text-sm px-4 py-3.5 rounded-full border border-gray-300 dark:border-white/10 outline-none focus:border-primary transition-colors" ${chatState.isTyping ? 'disabled' : ''} />
+                                    <button type="submit" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${chatState.isTyping ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed' : 'bg-primary hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 text-white'}"><i data-lucide="send" class="w-4 h-4 ${state.lang === 'ar' ? 'rotate-180 -ml-1' : 'ml-1'}"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+                lucide.createIcons();
+            };
+
+            const fullRenderBody = () => {
+                showProgress();
+                updateMeta();
+                savePrefs();
+                
+                if(dockObserver) { dockObserver.disconnect(); dockObserver = null; }
+
+                const headerContainer = document.getElementById('app-header');
+                const bodyContainer = document.getElementById('app-body');
+                
+                if(!state.selectedPropertyId) {
+                    headerContainer.innerHTML = getHeaderHTML();
+                    bodyContainer.innerHTML = getHomeHTML();
+                } else {
+                    headerContainer.innerHTML = ''; 
+                    bodyContainer.innerHTML = getPropertyDetailsHTML();
+                }
+                
+                lucide.createIcons();
+
+                const target = document.getElementById('dock-target');
+                const content = document.getElementById('dock-content');
+                if (target && content) {
+                    dockObserver = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) content.className = "relative z-40 w-full transition-all duration-300 mt-4";
+                            else if (entry.boundingClientRect.top > 0) content.className = "fixed bottom-6 left-4 sm:left-6 right-4 sm:right-6 max-w-4xl mx-auto z-50 transition-all duration-300";
+                        });
+                    }, { root: null, threshold: 0, rootMargin: '0px 0px 20px 0px' });
+                    dockObserver.observe(target);
+                }
+            };
+
+            const fullRender = () => {
+                document.getElementById('app-footer').innerHTML = `<footer dir="ltr" class="w-full pt-8 pb-6 mt-auto border-t flex flex-col items-center justify-center gap-2 relative z-10 bg-bgLight dark:bg-bgDark border-borderLight dark:border-white/5"><img src="https://i.postimg.cc/J7XDkQcR/1000140986-removebg-preview.png" alt="Logo" class="h-8 w-auto"><p class="text-sm text-darkBlue/70 dark:text-softBlue">All rights reserved to <span class="font-bold text-primary mx-1">Saknk</span> &copy; ${new Date().getFullYear()}</p></footer>`;
+                document.getElementById('ambient-bg').innerHTML = `<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none"><div class="absolute top-[0%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[600px] h-[300px] rounded-full blur-[80px] opacity-40 bg-midBlue dark:bg-primary" style="animation: float 10s ease-in-out infinite"></div><div class="absolute bottom-[10%] ${state.lang === 'ar' ? 'left-[-10%]' : 'right-[-10%]'} w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-30 bg-primary dark:bg-darkBlue" style="animation: float 20s ease-in-out infinite reverse; animation-delay: 2s"></div></div>`;
+                renderChatbot();
+                fullRenderBody();
+            };
+
+            const closeSplash = () => {
+                const splash = document.getElementById('splash-screen');
+                if(splash) {
+                    splash.classList.add('hidden-splash');
+                    setTimeout(() => splash.remove(), 600);
+                }
+            };
+
+            window.addEventListener('popstate', (e) => {
+                if (chatState.isOpen) { chatState.isOpen = false; renderChatbot(); return; }
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('id');
+                state.selectedPropertyId = id ? parseInt(id) : null;
+                fullRenderBody();
+            });
+
+            const init = () => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+                }
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('id');
+                if(id && properties.find(p => p.id === parseInt(id))) state.selectedPropertyId = parseInt(id);
+                fullRender();
+                setTimeout(() => { document.getElementById('app').style.opacity = '1'; }, 100);
+            };
+
+            return {
+                init, toggleTheme, toggleLang, setLocation, setPhase, setViewMode, toggleShowFavs,
+                navigateToProperty, navigateHome, toggleFav, setContactType, submitForm,
+                nextImage, prevImage, setActivePin, loadMore, shareProp, installPWA,
+                toggleChat, sendChatMessage, closeSplash
+            };
+        })();
+
+        window.onload = SaknkApp.init;
+    </script>
+</body>
+</html>
+
